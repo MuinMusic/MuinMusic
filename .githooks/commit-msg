@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo "###### Checking commit message format ######"
+
+TEMPORARY_FILE_PATH=$1
+COMMIT_MSG=`head -n1 $TEMPORARY_FILE_PATH`
+REGEX="^\[I+\-[0-9]+\] (feat|hotfix|fix|refactor|chore|docs|test)\: .+$"
+
+if ! [[ $COMMIT_MSG =~ $REGEX ]] ;then
+    echo "Commit message format is invalid. \n- Your commit message: $COMMIT_MSG" 
+    echo "- Valid format example: [I-11] feat: develop new API"
+    exit 1
+else
+    echo "Passed checkong commit message format"
+    exit 0
+fi
+	
+

@@ -1,0 +1,11 @@
+apply plugin: "checkstyle"
+
+checkstyle {
+    // https://docs.gradle.org/current/dsl/org.gradle.api.plugins.quality.CheckstyleExtension.html#N14436
+    ignoreFailures false
+    showViolations true
+    configFile = file "$rootProject.projectDir/config/checkstyle/checkstyle.xml"
+    reportsDir = file "$project.buildDir/reports/checkstyle"
+    toolVersion = '10.3.3'
+}
+
