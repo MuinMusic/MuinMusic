@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:mysql://production-database-url:3306/muin_music
+    username: production-username
+    password: production-password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: false
+
+logging.level:
+  org.hibernate.SQL: info
+  org.hibernate.type: info
