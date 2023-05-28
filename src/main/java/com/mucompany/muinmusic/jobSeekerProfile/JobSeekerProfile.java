@@ -1,21 +1,21 @@
-package com.mucompany.muinmusic.article;
+package com.mucompany.muinmusic.jobSeekerProfile;
 
-import com.mucompany.muinmusic.domain.Genre;
-import com.mucompany.muinmusic.domain.Part;
-import com.mucompany.muinmusic.domain.Skill;
+import com.mucompany.muinmusic.genre.Genre;
+import com.mucompany.muinmusic.part.Part;
+import com.mucompany.muinmusic.skill.Skill;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.antlr.v4.runtime.misc.NotNull;
+
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Getter
 @NoArgsConstructor
-public class Article {
+public class JobSeekerProfile {
 
     @Id
     @GeneratedValue
-    @Column(name = "article_id")
     private Long id;
 
     @NotNull
@@ -38,7 +38,7 @@ public class Article {
     @Enumerated(EnumType.STRING)
     private Genre genre;
 
-    public Article(Long id, String title, String career, int price, Part part, Skill skill, Genre genre) {
+    public JobSeekerProfile(Long id, String title, String career, int price, Part part, Skill skill, Genre genre) {
         this.id = id;
         this.title = title;
         this.career = career;
@@ -47,5 +47,4 @@ public class Article {
         this.skill = skill;
         this.genre = genre;
     }
-
 }
