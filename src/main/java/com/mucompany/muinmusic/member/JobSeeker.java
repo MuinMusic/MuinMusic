@@ -7,20 +7,21 @@ import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.springframework.util.Assert;
+
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Getter
 @NoArgsConstructor
-public class Member {
+public class JobSeeker {
 
     @Id
     @GeneratedValue
-    @Column(name = "member_id")
     private Long id;
 
     @NotNull
+    @Column(nullable = false)
     private String email;
 
     @NotNull
@@ -36,8 +37,8 @@ public class Member {
     private String major;
 
     @Builder
-    public Member(Long id, String email, String password, String name, String university, String major) {
-        Assert.notNull(email,"eamil은 필수값이여 합니다");
+    public JobSeeker(Long id, String email, String password, String name, String university, String major) {
+        Assert.notNull(email,"email은 필수값이여 합니다");
         Assert.notNull(password,"password는 필수값이여 합니다");
         Assert.notNull(name,"name은 필수값이여 합니다");
 
