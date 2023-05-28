@@ -3,10 +3,13 @@ package com.mucompany.muinmusic.article.app;
 import com.mucompany.muinmusic.article.Article;
 import com.mucompany.muinmusic.article.api.dto.ArticleCreateDto;
 import com.mucompany.muinmusic.article.repository.ArticleRepository;
+import com.mucompany.muinmusic.exception.ArticleNotFoundException;
 import com.mucompany.muinmusic.exception.ArticleValidityCheckException;
 import com.mucompany.muinmusic.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,13 @@ public class ArticleServiceImpl implements ArticleService {
         }
 
         return articleRepository.save(article);
+    }
+
+    @Override
+    public void delete(Long articleId) throws ArticleNotFoundException {
+        Article article = articleRepository.findById(articleId).orElseThrow(ArticleNotFoundException::new);
+
+        articleRepository.delete(article);
     }
 
     private static Article getArticle(ArticleCreateDto articleCreateDto, Long userId) {
