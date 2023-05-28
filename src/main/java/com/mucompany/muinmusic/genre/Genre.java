@@ -1,4 +1,4 @@
-package com.mucompany.muinmusic.domain;
+package com.mucompany.muinmusic.genre;
 
 public enum Genre {
 
