@@ -1,0 +1,17 @@
+version: '3.6'
+
+services:
+  mysql:
+    platform: linux/x86_64
+    image: mysql:5.7
+    container_name: muinmusic-mysql
+    command: --sql-mode="STRICT_TRANS_TABLES"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: "muin_music"
+    ports:
+      - "53306:3306"
+    volumes:
+      - ./docker/mysql/conf.d:/etc/mysql/conf.d
+      - ./docker/mysql/init.d:/docker-entrypoint-initdb.d
+    user: "mysql:mysql"
