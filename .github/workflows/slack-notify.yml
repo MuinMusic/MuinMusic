@@ -1,0 +1,37 @@
+on:
+  pull_request:
+    types: [ opened, closed, reopened ]
+  issues:
+    types: [ opened, deleted, closed, reopened ]
+name: Slack Notification
+jobs:
+  pullRequestNotification:
+    if: ${{ github.event_name == 'pull_request'}}
+    name: Pull Request Event Notification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: noti_pull_requests
+          SLACK_COLOR: good
+          SLACK_TITLE: PR ${{ github.event.pull_request.state }}
+          SLACK_MESSAGE: ${{ github.event.pull_request.title }}
+          SLACK_USERNAME: Pull Request 알리미
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_PR }}
+  issuesNotification:
+    if: ${{ github.event_name == 'issues'}}
+    name: Pull Request Review Event Notification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: noti_issues
+          SLACK_COLOR: good
+          SLACK_TITLE: ISSUE ${{ github.event.issue.state }}
+          SLACK_MESSAGE: ${{ github.event.issue.title }}
+          SLACK_USERNAME: Issue 알리미
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_ISSUE }}
