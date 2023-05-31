@@ -1,6 +1,18 @@
 package com.mucompany.muinmusic.part;
 
-public enum Part {
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
-    LIVE_ENGINEER, STUDIO_ENGINEER, LIVE_SESSION, STUDIO_SESSION
+@Entity
+@Setter
+@Getter
+public class Part {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String type;
 }

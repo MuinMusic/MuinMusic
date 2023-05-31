@@ -1,6 +1,18 @@
 package com.mucompany.muinmusic.genre;
 
-public enum Genre {
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
-    RNB, POP, ROCK, BLUES, HIPHOP, CLASSIC, KPOP, DANCE
+@Entity
+@Setter
+@Getter
+public class Genre {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String type;
 }

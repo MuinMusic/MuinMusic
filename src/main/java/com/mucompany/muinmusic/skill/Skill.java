@@ -1,6 +1,22 @@
 package com.mucompany.muinmusic.skill;
 
-public enum Skill {
+import com.mucompany.muinmusic.jobseekerprofile.JobSeekerProfile;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-    GUITAR, BASS, DRUM, KEYBOARD, VOCAL, SAXOPHONE, TRUMPET
+@Entity
+@Setter
+@Getter
+@ToString
+public class Skill {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String skills;
 }
