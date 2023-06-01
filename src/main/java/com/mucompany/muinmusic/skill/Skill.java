@@ -19,4 +19,8 @@ public class Skill {
 
     @Column(nullable = false)
     private String skills;
+
+    @ManyToOne
+    @JoinColumn(name = "job_seeker_profile_id")
+    private JobSeekerProfile jobSeekerProfile;
 }

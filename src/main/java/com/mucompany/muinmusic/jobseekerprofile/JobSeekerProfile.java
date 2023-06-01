@@ -33,20 +33,17 @@ public class JobSeekerProfile {
     @Column(nullable = false)
     private int price;
 
-    @OneToOne
-    @JoinColumn(name = "part_id")
-    private Part part;
+    @OneToMany
+    private List<Part> part;
 
-    @OneToOne
-    @JoinColumn(name = "skill_id")
-    private Skill skill;
+    @OneToMany
+    private List<Skill> skill;
 
-    @OneToOne
-    @JoinColumn(name = "genre_id")
-    private Genre genre;
+    @OneToMany
+    private List<Genre> genre;
 
     @Builder
-    public JobSeekerProfile( String title, String career,JobSeeker jobSeeker, int price, Part part, Skill skill, Genre genre) {
+    public JobSeekerProfile( String title, String career,JobSeeker jobSeeker, int price, List<Part> part, List<Skill> skill, List<Genre> genre) {
         Assert.notNull(title,"title 필수값이여 합니다");
         Assert.notNull(jobSeeker,"jobSeeker 필수값이여 합니다");
         Assert.notNull(price,"price 필수값이여 합니다");

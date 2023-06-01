@@ -1,5 +1,6 @@
 package com.mucompany.muinmusic.part;
 
+import com.mucompany.muinmusic.jobseekerprofile.JobSeekerProfile;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,4 +16,8 @@ public class Part {
 
     @Column(nullable = false)
     private String type;
+
+    @ManyToOne
+    @JoinColumn(name = "job_seeker_profile_id")
+    private JobSeekerProfile jobSeekerProfile;
 }
