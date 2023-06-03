@@ -6,7 +6,7 @@ import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.repository.MemberRepository;
 import com.mucompany.muinmusic.orderItem.domain.OrderItem;
 import com.mucompany.muinmusic.orderItem.repository.OrderItemRepository;
-import com.mucompany.muinmusic.orderstautus.OrderStatus;
+import com.mucompany.muinmusic.orderStatus.OrderStatus;
 import com.mucompany.muinmusic.orders.domain.Orders;
 import com.mucompany.muinmusic.orders.api.AddOrderRequestDto;
 import com.mucompany.muinmusic.orders.repository.OrdersRepository;

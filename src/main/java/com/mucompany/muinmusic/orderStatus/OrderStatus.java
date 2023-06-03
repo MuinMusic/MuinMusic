@@ -1,4 +1,4 @@
-package com.mucompany.muinmusic.orderstautus;
+package com.mucompany.muinmusic.orderStatus;
 
 public enum OrderStatus {
     PAYMENT_COMPLETED,
