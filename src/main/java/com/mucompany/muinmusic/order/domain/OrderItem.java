@@ -1,4 +1,4 @@
-package com.mucompany.muinmusic.orderItem.domain;
+package com.mucompany.muinmusic.order.domain;
 
 import com.mucompany.muinmusic.Item.domain.Item;
 import lombok.Getter;
