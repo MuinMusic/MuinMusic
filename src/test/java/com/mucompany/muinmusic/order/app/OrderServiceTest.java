@@ -1,15 +1,14 @@
-package com.mucompany.muinmusic.app;
+package com.mucompany.muinmusic.order.app;
 
 import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.repository.MemberRepository;
-import com.mucompany.muinmusic.orderItem.domain.OrderItem;
-import com.mucompany.muinmusic.orderItem.repository.OrderItemRepository;
-import com.mucompany.muinmusic.orderStatus.OrderStatus;
-import com.mucompany.muinmusic.orders.api.AddOrderRequestDto;
-import com.mucompany.muinmusic.orders.api.OrderResponseDto;
-import com.mucompany.muinmusic.orders.app.OrdersService;
+import com.mucompany.muinmusic.order.domain.OrderItem;
+import com.mucompany.muinmusic.order.repository.OrderItemRepository;
+import com.mucompany.muinmusic.order.domain.OrderStatus;
+import com.mucompany.muinmusic.order.api.OrderRequestDto;
+import com.mucompany.muinmusic.order.api.OrderResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class OrderServiceTest {
 
     @Autowired
-    private OrdersService ordersService;
+    private OrderService orderService;
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
@@ -38,25 +37,22 @@ public class OrderServiceTest {
     @DisplayName(value ="addOrderRequestDto 값 유효하면 주문 저장 후 OrderResponseDto 반환 성공" )
     @Test
     void t1() {
-        AddOrderRequestDto addOrderRequestDto = createAddOrderRequestDto();
+        OrderRequestDto orderRequestDto = createOrderRequestDto();
 
-        OrderResponseDto orderResponseDto = ordersService.save(addOrderRequestDto);
+        OrderResponseDto orderResponseDto = orderService.save(orderRequestDto);
 
         assertThat(orderResponseDto.getOrderStatus()).isEqualTo(OrderStatus.PAYMENT_COMPLETED.toString());
-        assertThat(orderResponseDto.getOrderItems().size()).isEqualTo(2);
-        assertThat(orderResponseDto.getAddress()).isEqualTo(addOrderRequestDto.getMember().getAddress());
+        assertThat(orderResponseDto.getOrderItemIdList().size()).isEqualTo(2);
     }
 
-    private  AddOrderRequestDto createAddOrderRequestDto() {
+    private OrderRequestDto createOrderRequestDto() {
         Member member = new Member("dp", "seoul");
         Item item = new Item("jpaBook", 20000, 10);
         Item item2 = new Item("springBook", 20000, 10);
         OrderItem orderItem = new OrderItem(item, 3, 60000);
         OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
 
-        List<OrderItem> orderItemList = new ArrayList<>();
-        orderItemList.add(orderItem);
-        orderItemList.add(orderItem2);
+        List<Long> orderItemIdList = new ArrayList<>();
 
         Member saveMember = memberRepository.save(member);
         itemRepository.save(item);
@@ -64,10 +60,12 @@ public class OrderServiceTest {
         orderItemRepository.save(orderItem);
         orderItemRepository.save(orderItem2);
 
+        orderItemIdList.add(orderItem.getId());
+        orderItemIdList.add(orderItem2.getId());
 
-        return AddOrderRequestDto.builder()
-                .member(saveMember)
-                .orderItems(orderItemList)
+        return OrderRequestDto.builder()
+                .memberId(saveMember.getId())
+                .orderItemIdList(orderItemIdList)
                 .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
                 .address(member.getAddress())
                 .orderDate(LocalDateTime.now())
