@@ -1,15 +1,13 @@
-package com.mucompany.muinmusic.repository;
+package com.mucompany.muinmusic.order.repository;
 
 import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.repository.MemberRepository;
-import com.mucompany.muinmusic.orderItem.domain.OrderItem;
-import com.mucompany.muinmusic.orderItem.repository.OrderItemRepository;
-import com.mucompany.muinmusic.orderStatus.OrderStatus;
-import com.mucompany.muinmusic.orders.domain.Orders;
-import com.mucompany.muinmusic.orders.api.AddOrderRequestDto;
-import com.mucompany.muinmusic.orders.repository.OrdersRepository;
+import com.mucompany.muinmusic.order.domain.OrderItem;
+import com.mucompany.muinmusic.order.domain.OrderStatus;
+import com.mucompany.muinmusic.order.domain.Order;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +18,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @Transactional
 public class OrderRepositoryTest {
 
     @Autowired
-    private OrdersRepository ordersRepository;
+    private OrderRepository orderRepository;
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
@@ -54,18 +51,16 @@ public class OrderRepositoryTest {
         orderItemRepository.save(orderItem);
         orderItemRepository.save(orderItem2);
 
-
-        AddOrderRequestDto addOrderRequestDto = AddOrderRequestDto.builder()
+        Order order =  Order.builder()
                 .member(member)
                 .orderItems(orderItemList)
                 .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
                 .address(member.getAddress())
                 .orderDate(LocalDateTime.now())
                 .build();
-        Orders orders = new Orders(addOrderRequestDto);
 
-        Orders saveOrder = ordersRepository.save(orders);
-        assertThat(saveOrder.getOrderItems().size()).isEqualTo(2);
-        assertThat(saveOrder.getMember().getName()).isEqualTo(member.getName());
+        Order saveOrder = orderRepository.save(order);
+        Assertions.assertThat(saveOrder.getOrderItems().size()).isEqualTo(2);
+        Assertions.assertThat(saveOrder.getMember().getName()).isEqualTo(member.getName());
     }
 }
