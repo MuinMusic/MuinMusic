@@ -3,12 +3,10 @@ package com.mucompany.muinmusic.order.app;
 import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
-import com.mucompany.muinmusic.member.repository.MemberRepository;
+import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.OrderItem;
-import com.mucompany.muinmusic.order.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
-import com.mucompany.muinmusic.order.api.OrderRequestDto;
-import com.mucompany.muinmusic.order.api.OrderResponseDto;
+import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,15 +35,15 @@ public class OrderServiceTest {
     @DisplayName(value ="addOrderRequestDto 값 유효하면 주문 저장 후 OrderResponseDto 반환 성공" )
     @Test
     void t1() {
-        OrderRequestDto orderRequestDto = createOrderRequestDto();
+        ConvertOrderDto convertOrderDto = createConvertOrderDto();
 
-        OrderResponseDto orderResponseDto = orderService.save(orderRequestDto);
+        ConvertOrderDto convertOrderDto1 = orderService.save(convertOrderDto);
 
-        assertThat(orderResponseDto.getOrderStatus()).isEqualTo(OrderStatus.PAYMENT_COMPLETED.toString());
-        assertThat(orderResponseDto.getOrderItemIdList().size()).isEqualTo(2);
+        assertThat(convertOrderDto1.getOrderStatus()).isEqualTo(OrderStatus.PAYMENT_COMPLETED.toString());
+        assertThat(convertOrderDto1.getOrderItemIdList().size()).isEqualTo(2);
     }
 
-    private OrderRequestDto createOrderRequestDto() {
+    private ConvertOrderDto createConvertOrderDto() {
         Member member = new Member("dp", "seoul");
         Item item = new Item("jpaBook", 20000, 10);
         Item item2 = new Item("springBook", 20000, 10);
@@ -63,7 +61,7 @@ public class OrderServiceTest {
         orderItemIdList.add(orderItem.getId());
         orderItemIdList.add(orderItem2.getId());
 
-        return OrderRequestDto.builder()
+        return ConvertOrderDto.builder()
                 .memberId(saveMember.getId())
                 .orderItemIdList(orderItemIdList)
                 .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())

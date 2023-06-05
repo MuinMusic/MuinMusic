@@ -7,13 +7,11 @@ import com.mucompany.muinmusic.exception.MemberNotFoundException;
 import com.mucompany.muinmusic.exception.OrderItemNotFoundException;
 import com.mucompany.muinmusic.exception.OutOfStockException;
 import com.mucompany.muinmusic.member.domain.Member;
-import com.mucompany.muinmusic.member.repository.MemberRepository;
-import com.mucompany.muinmusic.order.domain.OrderItem;
-import com.mucompany.muinmusic.order.repository.OrderItemRepository;
-import com.mucompany.muinmusic.order.api.OrderRequestDto;
-import com.mucompany.muinmusic.order.api.OrderResponseDto;
+import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
-import com.mucompany.muinmusic.order.repository.OrderRepository;
+import com.mucompany.muinmusic.order.domain.OrderItem;
+import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
+import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,20 +28,21 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
 
     @Override
-    public OrderResponseDto save(OrderRequestDto orderRequestDto) {
+    public ConvertOrderDto save(ConvertOrderDto convertOrderDto) {
         //회원 유효한지 체크
-        Member member = memberRepository.findById(orderRequestDto.getMemberId()).orElseThrow(MemberNotFoundException::new);
+        Member member = memberRepository.findById(convertOrderDto.getMemberId()).orElseThrow(MemberNotFoundException::new);
 
         //주문 아이템 존재여부 체크
-        List<Long> orderItemIdList = orderRequestDto.getOrderItemIdList();
+        List<Long> orderItemIdList = convertOrderDto.getOrderItemIdList();
         List<OrderItem> orderItemList = new ArrayList<>();
         orderItemCheck(orderItemIdList, orderItemList);
 
-        Order order = createOrder(orderRequestDto, member, orderItemList);
+        Order order = createOrder(convertOrderDto, member, orderItemList);
 
         orderRepository.save(order);
 
-        return createOrderResponseDto(orderRequestDto, member, orderItemIdList);
+
+        return convertOrderDto;
     }
 
     private void orderItemCheck(List<Long> orderItemIdList, List<OrderItem> orderItemList) {
@@ -60,23 +59,13 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private static Order createOrder(OrderRequestDto orderRequestDto, Member member, List<OrderItem> orderItemList) {
+    private static Order createOrder(ConvertOrderDto convertOrderDto, Member member, List<OrderItem> orderItemList) {
         return Order.builder()
                 .member(member)
                 .orderItems(orderItemList)
-                .orderStatus(orderRequestDto.getOrderStatus())
+                .orderStatus(convertOrderDto.getOrderStatus())
                 .address(member.getAddress())
-                .orderDate(orderRequestDto.getOrderDate())
-                .build();
-    }
-
-    private static OrderResponseDto createOrderResponseDto(OrderRequestDto orderRequestDto, Member member, List<Long> orderItemIdList) {
-        return OrderResponseDto.builder()
-                .memberId(member.getId())
-                .orderItemIdList(orderItemIdList)
-                .orderStatus(orderRequestDto.getOrderStatus())
-                .address(member.getAddress())
-                .orderDate(orderRequestDto.getOrderDate())
+                .orderDate(convertOrderDto.getOrderDate())
                 .build();
     }
 }

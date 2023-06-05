@@ -1,5 +1,6 @@
 package com.mucompany.muinmusic.order.api;
 
+import com.mucompany.muinmusic.order.app.ConvertOrderDto;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -20,11 +21,11 @@ public class OrderResponseDto {
     private LocalDateTime orderDate;
 
     @Builder
-    public OrderResponseDto(Long memberId, List<Long> orderItemIdList, String orderStatus, String address, LocalDateTime orderDate) {
-        this.memberId = memberId;
-        this.orderItemIdList = orderItemIdList;
-        this.orderStatus = orderStatus;
-        this.address = address;
-        this.orderDate = orderDate;
+    public OrderResponseDto(ConvertOrderDto convertOrderDto) {
+        this.memberId = convertOrderDto.getMemberId();
+        this.orderItemIdList = convertOrderDto.getOrderItemIdList();
+        this.orderStatus = convertOrderDto.getOrderStatus();
+        this.address = convertOrderDto.getAddress();
+        this.orderDate = convertOrderDto.getOrderDate();
     }
 }
