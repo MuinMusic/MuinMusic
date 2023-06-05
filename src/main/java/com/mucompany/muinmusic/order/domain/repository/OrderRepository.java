@@ -1,4 +1,4 @@
-package com.mucompany.muinmusic.order.repository;
+package com.mucompany.muinmusic.order.domain.repository;
 
 import com.mucompany.muinmusic.order.domain.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
