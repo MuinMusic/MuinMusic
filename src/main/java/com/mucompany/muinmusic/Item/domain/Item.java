@@ -27,4 +27,8 @@ public class Item {
         this.price = price;
         this.stock = stock;
     }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
 }

@@ -27,4 +27,12 @@ public class OrderRequestDto {
         this.address = address;
         this.orderDate = orderDate;
     }
+
+    public void setMemberId(Long memberId) {
+        this.memberId = memberId;
+    }
+
+    public void setOrderItemIdList(List<Long> orderItemIdList) {
+        this.orderItemIdList = orderItemIdList;
+    }
 }
