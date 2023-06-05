@@ -51,9 +51,13 @@ public class OrderServiceImpl implements OrderService {
 
             Item item = itemRepository.findById(orderItem.getItem().getId()).orElseThrow(ItemNotFoundException::new);
 
-            //재고 수량 파악
+            //수량 체크 및 변경 된 수량 업데이트
             if (item.getStock() < orderItem.getCount()) {
                 throw new OutOfStockException();
+            } else {
+                int updatedStock = item.getStock() - orderItem.getCount();
+                item.setStock(updatedStock);
+                itemRepository.save(item);
             }
             orderItemList.add(orderItem);
         }
