@@ -28,21 +28,21 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
 
     @Override
-    public ConvertOrderDto save(ConvertOrderDto convertOrderDto) {
+    public OrderRequest save(OrderRequest orderRequest) {
         //회원 유효한지 체크
-        Member member = memberRepository.findById(convertOrderDto.getMemberId()).orElseThrow(MemberNotFoundException::new);
+        Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(MemberNotFoundException::new);
 
         //주문 아이템 존재여부 체크
-        List<Long> orderItemIdList = convertOrderDto.getOrderItemIdList();
+        List<Long> orderItemIdList = orderRequest.getOrderItemIdList();
         List<OrderItem> orderItemList = new ArrayList<>();
         orderItemCheck(orderItemIdList, orderItemList);
 
-        Order order = createOrder(convertOrderDto, member, orderItemList);
+        Order order = createOrder(orderRequest, member, orderItemList);
 
         orderRepository.save(order);
 
 
-        return convertOrderDto;
+        return orderRequest;
     }
 
     private void orderItemCheck(List<Long> orderItemIdList, List<OrderItem> orderItemList) {
@@ -55,21 +55,20 @@ public class OrderServiceImpl implements OrderService {
             if (item.getStock() < orderItem.getCount()) {
                 throw new OutOfStockException();
             } else {
-                int updatedStock = item.getStock() - orderItem.getCount();
-                item.setStock(updatedStock);
+                item.decreaseStock(orderItem.getCount());
                 itemRepository.save(item);
             }
             orderItemList.add(orderItem);
         }
     }
 
-    private static Order createOrder(ConvertOrderDto convertOrderDto, Member member, List<OrderItem> orderItemList) {
+    private static Order createOrder(OrderRequest orderRequest, Member member, List<OrderItem> orderItemList) {
         return Order.builder()
                 .member(member)
                 .orderItems(orderItemList)
-                .orderStatus(convertOrderDto.getOrderStatus())
+                .orderStatus(orderRequest.getOrderStatus())
                 .address(member.getAddress())
-                .orderDate(convertOrderDto.getOrderDate())
+                .orderDate(orderRequest.getOrderDate())
                 .build();
     }
 }

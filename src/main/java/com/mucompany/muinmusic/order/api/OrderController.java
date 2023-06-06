@@ -1,6 +1,6 @@
 package com.mucompany.muinmusic.order.api;
 
-import com.mucompany.muinmusic.order.app.ConvertOrderDto;
+import com.mucompany.muinmusic.order.app.OrderRequest;
 import com.mucompany.muinmusic.order.app.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ public class OrderController {
     @PostMapping(value = "/orders")
     public ResponseEntity<OrderResponseDto> create(@RequestBody OrderRequestDto orderRequestDto) {
 
-        ConvertOrderDto convertOrderDto = ConvertOrderDto.builder()
+        OrderRequest orderRequest = OrderRequest.builder()
                 .memberId(orderRequestDto.getMemberId())
                 .orderItemIdList(orderRequestDto.getOrderItemIdList())
                 .orderStatus(orderRequestDto.getOrderStatus())
@@ -28,7 +28,7 @@ public class OrderController {
                 .orderDate(orderRequestDto.getOrderDate())
                 .build();
 
-        ConvertOrderDto result = orderService.save(convertOrderDto);
+        OrderRequest result = orderService.save(orderRequest);
 
         OrderResponseDto orderResponseDto = new OrderResponseDto(result);
 

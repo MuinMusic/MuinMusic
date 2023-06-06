@@ -35,15 +35,15 @@ public class OrderServiceTest {
     @DisplayName(value ="addOrderRequestDto 값 유효하면 주문 저장 후 OrderResponseDto 반환 성공" )
     @Test
     void t1() {
-        ConvertOrderDto convertOrderDto = createConvertOrderDto();
+        OrderRequest orderRequest = createConvertOrderDto();
 
-        ConvertOrderDto convertOrderDto1 = orderService.save(convertOrderDto);
+        OrderRequest orderRequest1 = orderService.save(orderRequest);
 
-        assertThat(convertOrderDto1.getOrderStatus()).isEqualTo(OrderStatus.PAYMENT_COMPLETED.toString());
-        assertThat(convertOrderDto1.getOrderItemIdList().size()).isEqualTo(2);
+        assertThat(orderRequest1.getOrderStatus()).isEqualTo(OrderStatus.PAYMENT_COMPLETED.toString());
+        assertThat(orderRequest1.getOrderItemIdList().size()).isEqualTo(2);
     }
 
-    private ConvertOrderDto createConvertOrderDto() {
+    private OrderRequest createConvertOrderDto() {
         Member member = new Member("dp", "seoul");
         Item item = new Item("jpaBook", 20000, 10);
         Item item2 = new Item("springBook", 20000, 10);
@@ -61,7 +61,7 @@ public class OrderServiceTest {
         orderItemIdList.add(orderItem.getId());
         orderItemIdList.add(orderItem2.getId());
 
-        return ConvertOrderDto.builder()
+        return OrderRequest.builder()
                 .memberId(saveMember.getId())
                 .orderItemIdList(orderItemIdList)
                 .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
