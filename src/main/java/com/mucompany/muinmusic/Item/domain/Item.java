@@ -28,7 +28,7 @@ public class Item {
         this.stock = stock;
     }
 
-    public void setStock(int stock) {
-        this.stock = stock;
+    public void decreaseStock(int count) {
+        this.stock -= count;
     }
 }
