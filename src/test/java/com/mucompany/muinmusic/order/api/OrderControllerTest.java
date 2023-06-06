@@ -12,8 +12,7 @@ import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class OrderControllerTest {
 
     @Autowired
@@ -46,6 +46,21 @@ public class OrderControllerTest {
     private OrderItemRepository orderItemRepository;
     @Autowired
     private ItemRepository itemRepository;
+
+    @BeforeAll
+    void dbSetUp() {
+        Member member = new Member("dp", "seoul");
+        Item item = new Item("jpaBook", 20000, 10);
+        Item item2 = new Item("springBook", 20000, 10);
+        OrderItem orderItem = new OrderItem(item, 3, 60000);
+        OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
+
+        memberRepository.save(member);
+        itemRepository.save(item);
+        itemRepository.save(item2);
+        orderItemRepository.save(orderItem);
+        orderItemRepository.save(orderItem2);
+    }
 
     @DisplayName(value = "orderRequestDto값 유효하면 http응답 201, 객체 반환 성공")
     @Test
@@ -66,9 +81,15 @@ public class OrderControllerTest {
     @DisplayName(value = "orderRequestDto.memberId로 member 찾지 못할 경우 MemberNotFoundException 발생 및 HTTP404 응답")
     @Test
     void t2() throws Exception {
-        OrderRequestDto orderRequestDto = createOrderRequestDto();
+        List<Long> orderItemIdList = List.of(1L, 2L);
 
-        orderRequestDto.setMemberId(100L);
+        OrderRequestDto orderRequestDto = OrderRequestDto.builder()
+                .memberId(-1L)
+                .orderItemIdList(orderItemIdList)
+                .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
+                .address("seoul")
+                .orderDate(LocalDateTime.now())
+                .build();
 
         String requestBody = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(orderRequestDto);
 
@@ -85,11 +106,15 @@ public class OrderControllerTest {
     @DisplayName(value = "orderRequestDto.orderItemIdList 로 orderItem 찾지 못할 경우 OrderItemNotFoundException 발생 및 HTTP404 응답")
     @Test
     void t3() throws Exception {
-        OrderRequestDto orderRequestDto = createOrderRequestDto();
+        List<Long> orderItemIdList = List.of(-1L, -2L);
 
-        List<Long> orderItemIdList = List.of(100L, 200L);
-
-        orderRequestDto.setOrderItemIdList(orderItemIdList);
+        OrderRequestDto orderRequestDto = OrderRequestDto.builder()
+                .memberId(1L)
+                .orderItemIdList(orderItemIdList)
+                .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
+                .address("seoul")
+                .orderDate(LocalDateTime.now())
+                .build();
 
         String requestBody = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(orderRequestDto);
 
@@ -131,7 +156,6 @@ public class OrderControllerTest {
     @DisplayName(value = "주문하려는 Item의 재고수량 초과했을경우 OutOfStockException 발생 및 HTTP404 응답")
     @Test
     void t5() throws Exception {
-        OrderRequestDto orderRequestDto = createOrderRequestDto();
         //아이템의 수량은 5개로 셋팅해놨다
         Item book = new Item("개구리책", 20000, 5);
         itemRepository.save(book);
@@ -140,7 +164,14 @@ public class OrderControllerTest {
         orderItemRepository.save(orderItem);
 
         List<Long> orderItemIdList = List.of(orderItem.getId());
-        orderRequestDto.setOrderItemIdList(orderItemIdList);
+
+        OrderRequestDto orderRequestDto = OrderRequestDto.builder()
+                .memberId(1L)
+                .orderItemIdList(orderItemIdList)
+                .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
+                .address("seoul")
+                .orderDate(LocalDateTime.now())
+                .build();
 
         String requestBody = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(orderRequestDto);
 
@@ -155,22 +186,11 @@ public class OrderControllerTest {
     }
 
     private OrderRequestDto createOrderRequestDto() {
-        Member member = new Member("dp", "seoul");
-        Item item = new Item("jpaBook", 20000, 10);
-        Item item2 = new Item("springBook", 20000, 10);
-        OrderItem orderItem = new OrderItem(item, 3, 60000);
-        OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
-
-        Member saveMember = memberRepository.save(member);
-        itemRepository.save(item);
-        itemRepository.save(item2);
-        orderItemRepository.save(orderItem);
-        orderItemRepository.save(orderItem2);
-
-        List<Long> orderItemIdList = List.of(orderItem.getId(), orderItem2.getId());
+        List<Long> orderItemIdList = List.of(1L, 2L);
+        Member member = memberRepository.findById(1L).orElseThrow(MemberNotFoundException::new);
 
         return OrderRequestDto.builder()
-                .memberId(saveMember.getId())
+                .memberId(member.getId())
                 .orderItemIdList(orderItemIdList)
                 .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
                 .address(member.getAddress())
