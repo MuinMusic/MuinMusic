@@ -2,11 +2,14 @@ package com.mucompany.muinmusic.order.app;
 
 import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
+import com.mucompany.muinmusic.exception.MemberNotFoundException;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
+import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
+import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,21 +29,26 @@ public class OrderServiceTest {
     @Autowired
     private OrderService orderService;
     @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
     private MemberRepository memberRepository;
     @Autowired
     private ItemRepository itemRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
 
-    @DisplayName(value ="addOrderRequestDto 값 유효하면 주문 저장 후 OrderResponseDto 반환 성공" )
+    @DisplayName(value = "OrderRequest 값 유효하면 주문 저장 성공 및 OrderResponse 반환 성공")
     @Test
     void t1() {
         OrderRequest orderRequest = createConvertOrderDto();
 
-        OrderRequest orderRequest1 = orderService.save(orderRequest);
+        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
 
-        assertThat(orderRequest1.getOrderStatus()).isEqualTo(OrderStatus.PAYMENT_COMPLETED.toString());
-        assertThat(orderRequest1.getOrderItemIdList().size()).isEqualTo(2);
+        Order order = orderRepository.findById(orderResponse.getMemberId()).orElseThrow(MemberNotFoundException::new);
+
+        assertThat(order.getOrderStatus()).isEqualTo(orderResponse.getOrderStatus());
+        assertThat(order.getMember().getAddress()).isEqualTo(orderResponse.getAddress());
+        assertThat(order.getOrderItems().size()).isEqualTo(orderResponse.getOrderItemIdList().size());
     }
 
     private OrderRequest createConvertOrderDto() {
@@ -64,7 +72,6 @@ public class OrderServiceTest {
         return OrderRequest.builder()
                 .memberId(saveMember.getId())
                 .orderItemIdList(orderItemIdList)
-                .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
                 .address(member.getAddress())
                 .orderDate(LocalDateTime.now())
                 .build();

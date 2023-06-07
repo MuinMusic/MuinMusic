@@ -1,7 +1,8 @@
 package com.mucompany.muinmusic.order.api;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
-import com.mucompany.muinmusic.order.app.OrderRequest;
+import com.mucompany.muinmusic.order.app.OrderResponse;
+import com.mucompany.muinmusic.order.domain.OrderStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -23,11 +24,11 @@ public class OrderResponseDto {
     private LocalDateTime orderDate;
 
     @Builder
-    public OrderResponseDto(OrderRequest orderRequest) {
-        this.memberId = orderRequest.getMemberId();
-        this.orderItemIdList = orderRequest.getOrderItemIdList();
-        this.orderStatus = orderRequest.getOrderStatus();
-        this.address = orderRequest.getAddress();
-        this.orderDate = orderRequest.getOrderDate();
+    public OrderResponseDto(OrderResponse orderResponse) {
+        this.memberId = orderResponse.getMemberId();
+        this.orderItemIdList = orderResponse.getOrderItemIdList();
+        this.orderStatus = orderResponse.getOrderStatus();
+        this.address = orderResponse.getAddress();
+        this.orderDate = orderResponse.getOrderDate();
     }
 }
