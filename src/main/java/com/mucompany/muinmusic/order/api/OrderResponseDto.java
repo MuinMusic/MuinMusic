@@ -16,7 +16,7 @@ public class OrderResponseDto {
 
     private List<Long> orderItemIdList;
 
-    private String orderStatus;
+    private OrderStatus orderStatus;
 
     private String address;
 

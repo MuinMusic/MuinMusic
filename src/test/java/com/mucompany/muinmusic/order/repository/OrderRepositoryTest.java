@@ -56,7 +56,7 @@ public class OrderRepositoryTest {
         Order order =  Order.builder()
                 .member(member)
                 .orderItems(orderItemList)
-                .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
+                .orderStatus(OrderStatus.PAYMENT_COMPLETED)
                 .address(member.getAddress())
                 .orderDate(LocalDateTime.now())
                 .build();

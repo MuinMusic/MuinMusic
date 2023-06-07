@@ -28,7 +28,7 @@ public class Order {
     private List<OrderItem> orderItems;
 
     @Column(nullable = false)
-    private String orderStatus;
+    private OrderStatus orderStatus;
 
     @Column(nullable = false)
     private String address;
@@ -36,7 +36,7 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Builder
-    public Order(Member member, List<OrderItem> orderItems, String orderStatus, String address, LocalDateTime orderDate) {
+    public Order(Member member, List<OrderItem> orderItems, OrderStatus orderStatus, String address, LocalDateTime orderDate) {
         Assert.notNull(member, "member can not be null");
         Assert.notNull(address, "address can not be null");
         Assert.notNull(orderItems, "orderItems can not be null");
@@ -47,5 +47,9 @@ public class Order {
         this.orderStatus = orderStatus;
         this.address = address;
         this.orderDate = orderDate;
+    }
+
+    public void changeOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
     }
 }
