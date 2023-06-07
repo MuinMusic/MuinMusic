@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS `member`;
 CREATE TABLE IF NOT EXISTS  `member` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `address` VARCHAR(50) NOT NULL,
-    `name` VARCHAR(4) NOT NULL,
+    `name` VARCHAR(30) NOT NULL,
     PRIMARY KEY (`id`))
 ;
 
