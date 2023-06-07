@@ -10,8 +10,10 @@ import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
+import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
+import com.mucompany.muinmusic.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,9 +28,10 @@ public class OrderServiceImpl implements OrderService {
     private final MemberRepository memberRepository;
     private final ItemRepository itemRepository;
     private final OrderItemRepository orderItemRepository;
+    private final PaymentService paymentService;
 
     @Override
-    public OrderRequest save(OrderRequest orderRequest) {
+    public OrderResponse placeOrder(OrderRequest orderRequest) {
         //회원 유효한지 체크
         Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(MemberNotFoundException::new);
 
@@ -38,11 +41,15 @@ public class OrderServiceImpl implements OrderService {
         orderItemCheck(orderItemIdList, orderItemList);
 
         Order order = createOrder(orderRequest, member, orderItemList);
-
         orderRepository.save(order);
 
-
-        return orderRequest;
+        //결제 결과를 확인하고 주문상태를 변경한다. ORDER -> PAYMENT_COMPLETED
+        OrderStatus orderStatus = order.getOrderStatus();
+        if (paymentService.paymentResult("success")) {
+            order.changeOrderStatus(OrderStatus.PAYMENT_COMPLETED);
+            orderStatus = order.getOrderStatus();
+        }
+        return new OrderResponse(orderRequest, orderStatus);
     }
 
     private void orderItemCheck(List<Long> orderItemIdList, List<OrderItem> orderItemList) {
@@ -66,8 +73,8 @@ public class OrderServiceImpl implements OrderService {
         return Order.builder()
                 .member(member)
                 .orderItems(orderItemList)
-                .orderStatus(orderRequest.getOrderStatus())
                 .address(member.getAddress())
+                .orderStatus(OrderStatus.ORDER)
                 .orderDate(orderRequest.getOrderDate())
                 .build();
     }
