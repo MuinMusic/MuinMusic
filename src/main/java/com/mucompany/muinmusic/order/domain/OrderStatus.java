@@ -1,7 +1,7 @@
 package com.mucompany.muinmusic.order.domain;
 
 public enum OrderStatus {
-    ORDER,
+    ORDERED,
     PAYMENT_COMPLETED,
     SHIPPING,
     REFUND_IN_PROGRESS,

@@ -12,7 +12,10 @@ import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -73,7 +76,7 @@ public class OrderControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$..memberId").value(1))
                 .andExpect(jsonPath("$..orderItemIdList").isNotEmpty())
-                .andExpect(jsonPath("$..orderStatus").value(orderRequestDto.getOrderStatus()))
+                .andExpect(jsonPath("$..orderStatus").value(OrderStatus.PAYMENT_COMPLETED.toString()))
                 .andExpect(jsonPath("$..address").value(orderRequestDto.getAddress()))
                 .andExpect(jsonPath("$..orderDate").exists());
     }
@@ -86,7 +89,6 @@ public class OrderControllerTest {
         OrderRequestDto orderRequestDto = OrderRequestDto.builder()
                 .memberId(-1L)
                 .orderItemIdList(orderItemIdList)
-                .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
                 .address("seoul")
                 .orderDate(LocalDateTime.now())
                 .build();
@@ -111,7 +113,6 @@ public class OrderControllerTest {
         OrderRequestDto orderRequestDto = OrderRequestDto.builder()
                 .memberId(1L)
                 .orderItemIdList(orderItemIdList)
-                .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
                 .address("seoul")
                 .orderDate(LocalDateTime.now())
                 .build();
@@ -168,7 +169,6 @@ public class OrderControllerTest {
         OrderRequestDto orderRequestDto = OrderRequestDto.builder()
                 .memberId(1L)
                 .orderItemIdList(orderItemIdList)
-                .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
                 .address("seoul")
                 .orderDate(LocalDateTime.now())
                 .build();
@@ -192,7 +192,6 @@ public class OrderControllerTest {
         return OrderRequestDto.builder()
                 .memberId(member.getId())
                 .orderItemIdList(orderItemIdList)
-                .orderStatus(OrderStatus.PAYMENT_COMPLETED.toString())
                 .address(member.getAddress())
                 .orderDate(LocalDateTime.now())
                 .build();

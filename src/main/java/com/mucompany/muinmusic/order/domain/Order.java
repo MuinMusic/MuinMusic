@@ -49,7 +49,7 @@ public class Order {
         this.orderDate = orderDate;
     }
 
-    public void changeOrderStatus(OrderStatus orderStatus) {
-        this.orderStatus = orderStatus;
+    public OrderStatus payed() {
+       return this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
     }
 }
