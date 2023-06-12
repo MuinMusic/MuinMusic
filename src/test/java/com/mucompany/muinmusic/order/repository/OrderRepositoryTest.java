@@ -33,7 +33,7 @@ public class OrderRepositoryTest {
     @Autowired
     OrderItemRepository orderItemRepository;
 
-    @DisplayName(value ="addOrderRequestDto 값 유효하면 저장 성공" )
+    @DisplayName(value = "addOrderRequestDto 값 유효하면 저장 성공")
     @Test
     void t1() {
 
@@ -53,7 +53,7 @@ public class OrderRepositoryTest {
         orderItemRepository.save(orderItem);
         orderItemRepository.save(orderItem2);
 
-        Order order =  Order.builder()
+        Order order = Order.builder()
                 .member(member)
                 .orderItems(orderItemList)
                 .orderStatus(OrderStatus.PAYMENT_COMPLETED)
