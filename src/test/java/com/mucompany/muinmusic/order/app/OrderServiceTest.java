@@ -3,11 +3,11 @@ package com.mucompany.muinmusic.order.app;
 import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
 import com.mucompany.muinmusic.exception.MemberNotFoundException;
+import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
-import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
@@ -49,6 +50,24 @@ public class OrderServiceTest {
         assertThat(order.getOrderStatus()).isEqualTo(orderResponse.getOrderStatus());
         assertThat(order.getMember().getAddress()).isEqualTo(orderResponse.getAddress());
         assertThat(order.getOrderItems().size()).isEqualTo(orderResponse.getOrderItemIdList().size());
+    }
+
+    @DisplayName(value = "orderId, memberId 값 유효하면 취소 성공 ")
+    @Test
+    void t2() {
+        OrderRequest orderRequest = createConvertOrderDto();
+
+        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
+        Long orderItemId = orderResponse.getOrderItemIdList().get(1);
+
+        Order order = orderRepository.findByOrderItemsId(orderItemId);
+        Long memberId = orderResponse.getMemberId();
+
+        orderService.cancel(order.getId(), memberId);
+
+        assertThrows(OrderNotFoundException.class, () -> {
+            orderRepository.findById(order.getId()).orElseThrow(OrderNotFoundException::new);
+        });
     }
 
     private OrderRequest createConvertOrderDto() {
