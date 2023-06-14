@@ -20,8 +20,10 @@ import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import com.mucompany.muinmusic.payment.PaymentService;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +37,10 @@ public class OrderServiceImpl implements OrderService {
     private final ItemRepository itemRepository;
     private final OrderItemRepository orderItemRepository;
     private final PaymentService paymentService;
+    private final EntityManager em;
 
     @Override
+    @Transactional
     public OrderResponse placeOrder(OrderRequest orderRequest) {
         //회원 유효한지 체크
         Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(() -> new MemberNotFoundException());
@@ -60,6 +64,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void cancel(Long orderId, Long memberId) {
         Member loginMember = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException());
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException());
@@ -69,17 +74,13 @@ public class OrderServiceImpl implements OrderService {
             throw new NotMatchTheOrdererException();
         }
 
-        //이미 배송중 일 경우 주문 취소 불가
-        if (order.getOrderStatus().equals(OrderStatus.SHIPPING)) {
-            throw new OrderCancellationException();
-        }
-
-        orderRepository.delete(order);
+        //취소 검증
+        order.cancel();
     }
 
     private void validate(List<Long> orderItemIdList, List<OrderItem> orderItemList) {
         for (Long orderItemId : orderItemIdList) {
-            OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(()-> new OrderItemNotFoundException());
+            OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new OrderItemNotFoundException());
 
             Item item = itemRepository.findById(orderItem.getItem().getId()).orElseThrow(() -> new ItemNotFoundException());
 

@@ -1,14 +1,8 @@
 package com.mucompany.muinmusic.order.domain;
 
+import com.mucompany.muinmusic.exception.OrderCancellationException;
 import com.mucompany.muinmusic.member.domain.Member;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,7 +22,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
 
     @OneToMany
@@ -43,7 +37,7 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Builder
-    public Order(Member member, List<OrderItem> orderItems, OrderStatus orderStatus, String address, LocalDateTime orderDate) {
+    public Order(Member member, List<OrderItem> orderItems, OrderStatus orderStatus, String address, LocalDateTime orderDate, boolean deleted) {
         Assert.notNull(member, "member can not be null");
         Assert.notNull(address, "address can not be null");
         Assert.notNull(orderItems, "orderItems can not be null");
@@ -57,10 +51,17 @@ public class Order {
     }
 
     public OrderStatus payed() {
-       return this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
+        return this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
     }
 
     public void shipping() {
-         this.orderStatus = OrderStatus.SHIPPING;
+        this.orderStatus = OrderStatus.SHIPPING;
+    }
+
+    public void cancel() {
+        if (orderStatus.equals(OrderStatus.SHIPPING)) {
+            throw new OrderCancellationException();
+        }
+        this.orderStatus = OrderStatus.CANCELLED;
     }
 }
