@@ -8,10 +8,10 @@ import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
+import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,10 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @Transactional
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class OrderServiceTest {
 
     @Autowired
@@ -38,10 +38,35 @@ public class OrderServiceTest {
     @Autowired
     private OrderItemRepository orderItemRepository;
 
+
+    @BeforeAll
+    @Transactional
+    void setup() {
+        Member member = new Member("dp", "seoul");
+        Item item = new Item("jpaBook", 20000, 10);
+        Item item2 = new Item("springBook", 20000, 10);
+        OrderItem orderItem = new OrderItem(item, 3, 60000);
+        OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
+
+        memberRepository.save(member);
+        itemRepository.save(item);
+        itemRepository.save(item2);
+        orderItemRepository.save(orderItem);
+        orderItemRepository.save(orderItem2);
+    }
+
     @DisplayName(value = "OrderRequest 값 유효하면 주문 저장 성공 및 OrderResponse 반환 성공")
     @Test
     void t1() {
-        OrderRequest orderRequest = createConvertOrderDto();
+        List<Long> orderItemIdList = new ArrayList<>();
+        orderItemIdList.add(1L);
+
+        OrderRequest orderRequest = OrderRequest.builder()
+                .memberId(1L)
+                .orderItemIdList(orderItemIdList)
+                .address("seoul")
+                .orderDate(LocalDateTime.now())
+                .build();
 
         OrderResponse orderResponse = orderService.placeOrder(orderRequest);
 
@@ -55,44 +80,25 @@ public class OrderServiceTest {
     @DisplayName(value = "orderId, memberId 값 유효하면 취소 성공 ")
     @Test
     void t2() {
-        OrderRequest orderRequest = createConvertOrderDto();
+        OrderItem orderItem = orderItemRepository.findAll().get(0);
+        List<Long> orderItemIdList = new ArrayList<>();
+        orderItemIdList.add(orderItem.getId());
+
+        OrderRequest orderRequest = OrderRequest.builder()
+                .memberId(1L)
+                .orderItemIdList(orderItemIdList)
+                .address("seoul")
+                .orderDate(LocalDateTime.now())
+                .build();
 
         OrderResponse orderResponse = orderService.placeOrder(orderRequest);
-        Long orderItemId = orderResponse.getOrderItemIdList().get(1);
+        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
 
         Order order = orderRepository.findByOrderItemsId(orderItemId);
         Long memberId = orderResponse.getMemberId();
 
         orderService.cancel(order.getId(), memberId);
 
-        assertThrows(OrderNotFoundException.class, () -> {
-            orderRepository.findById(order.getId()).orElseThrow(OrderNotFoundException::new);
-        });
-    }
-
-    private OrderRequest createConvertOrderDto() {
-        Member member = new Member("dp", "seoul");
-        Item item = new Item("jpaBook", 20000, 10);
-        Item item2 = new Item("springBook", 20000, 10);
-        OrderItem orderItem = new OrderItem(item, 3, 60000);
-        OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
-
-        List<Long> orderItemIdList = new ArrayList<>();
-
-        Member saveMember = memberRepository.save(member);
-        itemRepository.save(item);
-        itemRepository.save(item2);
-        orderItemRepository.save(orderItem);
-        orderItemRepository.save(orderItem2);
-
-        orderItemIdList.add(orderItem.getId());
-        orderItemIdList.add(orderItem2.getId());
-
-        return OrderRequest.builder()
-                .memberId(saveMember.getId())
-                .orderItemIdList(orderItemIdList)
-                .address(member.getAddress())
-                .orderDate(LocalDateTime.now())
-                .build();
+        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 }
