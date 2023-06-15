@@ -6,7 +6,6 @@ import com.mucompany.muinmusic.order.app.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,7 +32,7 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderResponseDto);
     }
 
-    @DeleteMapping(value = "/orders/{orderId}")
+    @PostMapping(value = "/orders/{orderId}/cancel")
     public ResponseEntity<Object> cancel(@PathVariable Long orderId, @RequestParam Long memberId) {
         orderService.cancel(orderId, memberId);
 

@@ -3,7 +3,6 @@ package com.mucompany.muinmusic.order.app;
 import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
 import com.mucompany.muinmusic.exception.MemberNotFoundException;
-import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
@@ -12,8 +11,12 @@ import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -24,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+//@ActiveProfiles("test")
 public class OrderServiceTest {
 
     @Autowired
@@ -37,11 +40,27 @@ public class OrderServiceTest {
     private ItemRepository itemRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
+    private void mySqlResetAutoIncrement() {
+        jdbcTemplate.execute("ALTER TABLE member AUTO_INCREMENT = 1");
+        jdbcTemplate.execute("ALTER TABLE orders AUTO_INCREMENT = 1");
+        jdbcTemplate.execute("ALTER TABLE item AUTO_INCREMENT = 1");
+        jdbcTemplate.execute("ALTER TABLE order_item AUTO_INCREMENT = 1");
+    }
 
-    @BeforeAll
-    @Transactional
+    private void h2DBResetAutoIncrement() {
+        jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE orders ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE order_item ALTER COLUMN id RESTART WITH 1");
+    }
+    @BeforeEach
     void setup() {
+        mySqlResetAutoIncrement();
+//        h2DBResetAutoIncrement();
+
         Member member = new Member("dp", "seoul");
         Item item = new Item("jpaBook", 20000, 10);
         Item item2 = new Item("springBook", 20000, 10);

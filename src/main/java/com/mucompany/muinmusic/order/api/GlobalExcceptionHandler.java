@@ -53,7 +53,7 @@ public class GlobalExcceptionHandler {
 
     @ExceptionHandler(OrderCancellationException.class)
     public ResponseEntity<String> orderCancellationException(OrderCancellationException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     @ExceptionHandler(OrderNotFoundException.class)

@@ -14,14 +14,12 @@ import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +29,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+//@ActiveProfiles("test")
 public class OrderControllerTest {
 
     @Autowired
@@ -56,24 +53,40 @@ public class OrderControllerTest {
     private OrderService orderService;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-    @BeforeAll
-    void dbSetUp() {
+    private void mySqlResetAutoIncrement() {
+        jdbcTemplate.execute("ALTER TABLE member AUTO_INCREMENT = 1");
+        jdbcTemplate.execute("ALTER TABLE orders AUTO_INCREMENT = 1");
+        jdbcTemplate.execute("ALTER TABLE item AUTO_INCREMENT = 1");
+        jdbcTemplate.execute("ALTER TABLE order_item AUTO_INCREMENT = 1");
+        jdbcTemplate.execute("ALTER TABLE orders AUTO_INCREMENT = 1");
+    }
+
+    private void h2DBResetAutoIncrement() {
+        jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE orders ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE order_item ALTER COLUMN id RESTART WITH 1");
+    }
+
+    @BeforeEach
+    void setup() {
+        mySqlResetAutoIncrement();
+//        h2DBResetAutoIncrement();
+
         Member member = new Member("dp", "seoul");
-        Item item = new Item("김동률 콘서트", 20000, 10);
-        Item item2 = new Item("최우준 콘서트", 20000, 10);
-        Item item3 = new Item("에스파 콘서트", 20000, 10);
+        Item item = new Item("jpaBook", 20000, 10);
+        Item item2 = new Item("springBook", 20000, 10);
         OrderItem orderItem = new OrderItem(item, 3, 60000);
         OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
-        OrderItem orderItem3 = new OrderItem(item3, 1, 20000);
 
         memberRepository.save(member);
         itemRepository.save(item);
         itemRepository.save(item2);
-        itemRepository.save(item3);
         orderItemRepository.save(orderItem);
         orderItemRepository.save(orderItem2);
-        orderItemRepository.save(orderItem3);
     }
 
     @DisplayName(value = "orderRequestDto값 유효하면 http응답 201, 객체 반환 성공")
@@ -199,15 +212,7 @@ public class OrderControllerTest {
     @DisplayName(value = "orderId,userId 값 유효하면 주문 취소 성공")
     @Test
     void t6() throws Exception {
-        List<Long> orderItemIdList = List.of(1L, 2L);
-        OrderRequest orderRequest = OrderRequest.builder()
-                .memberId(1L)
-                .orderItemIdList(orderItemIdList)
-                .address("seoul")
-                .orderDate(LocalDateTime.now())
-                .build();
-
-        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
+        OrderResponse orderResponse = orderPlace();
 
         Long orderItemId = orderResponse.getOrderItemIdList().get(0);
         Order order = orderRepository.findByOrderItemsId(orderItemId);
@@ -215,34 +220,25 @@ public class OrderControllerTest {
         Long orderId = order.getId();
         Long memberId = orderResponse.getMemberId();
 
-        mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
+        mockMvc.perform(post("/api/orders/{orderId}/cancel", orderId).param("memberId", memberId.toString()))
                 .andExpect(status().isNoContent());
     }
 
     @DisplayName(value = "주문 취소 시 주문자와 로그인한 회원이 일치하지 않을 경우 NotMatchTheOrdererException 발생")
     @Test
     void t7() throws Exception {
-        List<Long> orderItemIdList = List.of(1L, 2L);
-        OrderRequest orderRequest = OrderRequest.builder()
-                .memberId(1L)
-                .orderItemIdList(orderItemIdList)
-                .address("seoul")
-                .orderDate(LocalDateTime.now())
-                .build();
+        OrderResponse orderResponse = orderPlace();
 
-        //주문하지 않은 멤버 추가
-        Member member = new Member("테스트", "seoul");
-        memberRepository.save(member);
-
-        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
+        Member otherMember = new Member("새 멤버", "seoul");
+        memberRepository.save(otherMember);
 
         Long orderItemId = orderResponse.getOrderItemIdList().get(1);
         Order order = orderRepository.findByOrderItemsId(orderItemId);
 
         Long orderId = order.getId();
-        Long memberId = 2L;
+        Long memberId = otherMember.getId();
 
-        mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
+        mockMvc.perform(post("/api/orders/{orderId}/cancel", orderId).param("memberId", memberId.toString()))
                 .andExpect(status().isNotFound())
                 .andExpect(result -> {
                     Throwable exception = result.getResolvedException();
@@ -255,15 +251,7 @@ public class OrderControllerTest {
     @DisplayName(value = "주문취소 시 주문한 상품을 찾을 수 없는 경우 OrderNotFoundException 발생")
     @Test
     void t8() throws Exception {
-        List<Long> orderItemIdList = List.of(1L, 2L);
-        OrderRequest orderRequest = OrderRequest.builder()
-                .memberId(1L)
-                .orderItemIdList(orderItemIdList)
-                .address("seoul")
-                .orderDate(LocalDateTime.now())
-                .build();
-
-        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
+        OrderResponse orderResponse = orderPlace();
 
         Long orderItemId = orderResponse.getOrderItemIdList().get(0);
         orderRepository.findByOrderItemsId(orderItemId);
@@ -271,7 +259,7 @@ public class OrderControllerTest {
         Long orderId = -1L;
         Long memberId = orderResponse.getMemberId();
 
-        mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
+        mockMvc.perform(post("/api/orders/{orderId}/cancel", orderId).param("memberId", memberId.toString()))
                 .andExpect(status().isNotFound())
                 .andExpect(result -> {
                     Throwable exception = result.getResolvedException();
@@ -284,6 +272,27 @@ public class OrderControllerTest {
     @DisplayName(value = "주문취소 시 이미 상품이 배송중일 경우 OrderCancellationException 발생")
     @Test
     void t9() throws Exception {
+        OrderResponse orderResponse = orderPlace();
+
+        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
+        Order order = orderRepository.findByOrderItemsId(orderItemId);
+
+        order.shipping();
+
+        Long orderId = order.getId();
+        Long memberId = orderResponse.getMemberId();
+
+        mockMvc.perform(post("/api/orders/{orderId}/cancel", orderId).param("memberId", memberId.toString()))
+                .andExpect(status().isConflict())
+                .andExpect(result -> {
+                    Throwable exception = result.getResolvedException();
+                    assertNotNull(exception);
+                    assertEquals(OrderCancellationException.class, exception.getClass());
+                    assertEquals("배송중인 상품은 취소할 수 없습니다.", exception.getMessage());
+                });
+    }
+
+    private OrderResponse orderPlace() {
         List<Long> orderItemIdList = List.of(1L, 2L);
         OrderRequest orderRequest = OrderRequest.builder()
                 .memberId(1L)
@@ -294,22 +303,7 @@ public class OrderControllerTest {
 
         OrderResponse orderResponse = orderService.placeOrder(orderRequest);
 
-        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
-        Order order = orderRepository.findByOrderItemsId(orderItemId);
-
-        order.shipping();
-
-        Long orderId = order.getId();
-        Long memberId = orderResponse.getMemberId();
-
-        mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
-                .andExpect(status().isNotFound())
-                .andExpect(result -> {
-                    Throwable exception = result.getResolvedException();
-                    assertNotNull(exception);
-                    assertEquals(OrderCancellationException.class, exception.getClass());
-                    assertEquals("배송중인 상품은 취소할 수 없습니다.", exception.getMessage());
-                });
+        return orderResponse;
     }
 
     private OrderRequestDto createOrderRequestDto() {

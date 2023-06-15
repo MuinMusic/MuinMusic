@@ -29,6 +29,7 @@ public class Order {
     private List<OrderItem> orderItems;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
     @Column(nullable = false)
@@ -37,7 +38,7 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Builder
-    public Order(Member member, List<OrderItem> orderItems, OrderStatus orderStatus, String address, LocalDateTime orderDate, boolean deleted) {
+    public Order(Member member, List<OrderItem> orderItems, OrderStatus orderStatus, String address, LocalDateTime orderDate) {
         Assert.notNull(member, "member can not be null");
         Assert.notNull(address, "address can not be null");
         Assert.notNull(orderItems, "orderItems can not be null");
