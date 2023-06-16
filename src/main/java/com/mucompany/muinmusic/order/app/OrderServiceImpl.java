@@ -2,16 +2,7 @@ package com.mucompany.muinmusic.order.app;
 
 import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
-
-import com.mucompany.muinmusic.exception.ItemNameNotMatchException;
-import com.mucompany.muinmusic.exception.ItemNotFoundException;
-import com.mucompany.muinmusic.exception.ItemPriceNotMatchException;
-import com.mucompany.muinmusic.exception.MemberNotFoundException;
-import com.mucompany.muinmusic.exception.NotMatchTheOrdererException;
-import com.mucompany.muinmusic.exception.OrderCancellationException;
-import com.mucompany.muinmusic.exception.OrderItemNotFoundException;
-import com.mucompany.muinmusic.exception.OrderNotFoundException;
-import com.mucompany.muinmusic.exception.OutOfStockException;
+import com.mucompany.muinmusic.exception.*;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
@@ -20,7 +11,6 @@ import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import com.mucompany.muinmusic.payment.PaymentService;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +27,6 @@ public class OrderServiceImpl implements OrderService {
     private final ItemRepository itemRepository;
     private final OrderItemRepository orderItemRepository;
     private final PaymentService paymentService;
-    private final EntityManager em;
 
     @Override
     @Transactional

@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-//@ActiveProfiles("test")
+@ActiveProfiles("test")
 public class OrderControllerTest {
 
     @Autowired
@@ -56,13 +57,6 @@ public class OrderControllerTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private void mySqlResetAutoIncrement() {
-        jdbcTemplate.execute("ALTER TABLE member AUTO_INCREMENT = 1");
-        jdbcTemplate.execute("ALTER TABLE orders AUTO_INCREMENT = 1");
-        jdbcTemplate.execute("ALTER TABLE item AUTO_INCREMENT = 1");
-        jdbcTemplate.execute("ALTER TABLE order_item AUTO_INCREMENT = 1");
-        jdbcTemplate.execute("ALTER TABLE orders AUTO_INCREMENT = 1");
-    }
 
     private void h2DBResetAutoIncrement() {
         jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
@@ -70,11 +64,9 @@ public class OrderControllerTest {
         jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE order_item ALTER COLUMN id RESTART WITH 1");
     }
-
     @BeforeEach
     void setup() {
-        mySqlResetAutoIncrement();
-//        h2DBResetAutoIncrement();
+        h2DBResetAutoIncrement();
 
         Member member = new Member("dp", "seoul");
         Item item = new Item("jpaBook", 20000, 10);

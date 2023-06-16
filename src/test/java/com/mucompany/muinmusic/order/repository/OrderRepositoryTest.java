@@ -24,7 +24,7 @@ import java.util.List;
 
 @SpringBootTest
 @Transactional
-//@ActiveProfiles("test")
+@ActiveProfiles("test")
 public class OrderRepositoryTest {
 
     @Autowired

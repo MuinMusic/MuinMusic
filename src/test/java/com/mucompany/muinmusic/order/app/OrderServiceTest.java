@@ -10,12 +10,12 @@ import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-//@ActiveProfiles("test")
+@ActiveProfiles("test")
 public class OrderServiceTest {
 
     @Autowired
@@ -43,12 +43,6 @@ public class OrderServiceTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private void mySqlResetAutoIncrement() {
-        jdbcTemplate.execute("ALTER TABLE member AUTO_INCREMENT = 1");
-        jdbcTemplate.execute("ALTER TABLE orders AUTO_INCREMENT = 1");
-        jdbcTemplate.execute("ALTER TABLE item AUTO_INCREMENT = 1");
-        jdbcTemplate.execute("ALTER TABLE order_item AUTO_INCREMENT = 1");
-    }
 
     private void h2DBResetAutoIncrement() {
         jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
@@ -56,10 +50,10 @@ public class OrderServiceTest {
         jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE order_item ALTER COLUMN id RESTART WITH 1");
     }
+
     @BeforeEach
     void setup() {
-        mySqlResetAutoIncrement();
-//        h2DBResetAutoIncrement();
+        h2DBResetAutoIncrement();
 
         Member member = new Member("dp", "seoul");
         Item item = new Item("jpaBook", 20000, 10);
@@ -77,7 +71,9 @@ public class OrderServiceTest {
     @DisplayName(value = "OrderRequest 값 유효하면 주문 저장 성공 및 OrderResponse 반환 성공")
     @Test
     void t1() {
+        //이메일로 멤버 찾기 unique
         List<Long> orderItemIdList = new ArrayList<>();
+
         orderItemIdList.add(1L);
 
         OrderRequest orderRequest = OrderRequest.builder()
