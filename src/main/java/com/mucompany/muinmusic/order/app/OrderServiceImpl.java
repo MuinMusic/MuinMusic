@@ -13,6 +13,7 @@ import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import com.mucompany.muinmusic.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +29,10 @@ public class OrderServiceImpl implements OrderService {
     private final PaymentService paymentService;
 
     @Override
+    @Transactional
     public OrderResponse placeOrder(OrderRequest orderRequest) {
         //회원 유효한지 체크
-        Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(MemberNotFoundException::new);
+        Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(() -> new MemberNotFoundException());
 
         //주문 아이템 존재여부 체크
         List<Long> orderItemIdList = orderRequest.getOrderItemIdList();
@@ -50,11 +52,26 @@ public class OrderServiceImpl implements OrderService {
         return new OrderResponse(orderRequest, orderStatus);
     }
 
+    @Override
+    @Transactional
+    public void cancel(Long orderId, Long memberId) {
+        Member loginMember = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException());
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException());
+
+        //주문자와 로그인 회원 일치하는지 체크
+        if (!order.getMember().equals(loginMember)) {
+            throw new NotMatchTheOrdererException();
+        }
+
+        //취소 검증
+        order.cancel();
+    }
+
     private void validate(List<Long> orderItemIdList, List<OrderItem> orderItemList) {
         for (Long orderItemId : orderItemIdList) {
-            OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(OrderItemNotFoundException::new);
+            OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new OrderItemNotFoundException());
 
-            Item item = itemRepository.findById(orderItem.getItem().getId()).orElseThrow(ItemNotFoundException::new);
+            Item item = itemRepository.findById(orderItem.getItem().getId()).orElseThrow(() -> new ItemNotFoundException());
 
             // 주문상품명과 ,가격 결제전에 변경되었는지 확인하기
             itemNameAndPriceCheck(orderItem, item);

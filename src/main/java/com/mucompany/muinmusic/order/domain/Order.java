@@ -1,11 +1,12 @@
 package com.mucompany.muinmusic.order.domain;
 
+import com.mucompany.muinmusic.exception.OrderCancellationException;
 import com.mucompany.muinmusic.member.domain.Member;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import jakarta.persistence.*;
 import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;
@@ -21,13 +22,14 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
 
     @OneToMany
     private List<OrderItem> orderItems;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
     @Column(nullable = false)
@@ -50,6 +52,17 @@ public class Order {
     }
 
     public OrderStatus payed() {
-       return this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
+        return this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
+    }
+
+    public void shipping() {
+        this.orderStatus = OrderStatus.SHIPPING;
+    }
+
+    public void cancel() {
+        if (orderStatus.equals(OrderStatus.SHIPPING)) {
+            throw new OrderCancellationException();
+        }
+        this.orderStatus = OrderStatus.CANCELLED;
     }
 }

@@ -10,10 +10,13 @@ import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -24,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
+@ActiveProfiles("test")
 public class OrderServiceTest {
 
     @Autowired
@@ -36,11 +40,48 @@ public class OrderServiceTest {
     private ItemRepository itemRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+
+    private void h2DBResetAutoIncrement() {
+        jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE orders ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE order_item ALTER COLUMN id RESTART WITH 1");
+    }
+
+    @BeforeEach
+    void setup() {
+        h2DBResetAutoIncrement();
+
+        Member member = new Member("dp", "seoul");
+        Item item = new Item("jpaBook", 20000, 10);
+        Item item2 = new Item("springBook", 20000, 10);
+        OrderItem orderItem = new OrderItem(item, 3, 60000);
+        OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
+
+        memberRepository.save(member);
+        itemRepository.save(item);
+        itemRepository.save(item2);
+        orderItemRepository.save(orderItem);
+        orderItemRepository.save(orderItem2);
+    }
 
     @DisplayName(value = "OrderRequest 값 유효하면 주문 저장 성공 및 OrderResponse 반환 성공")
     @Test
     void t1() {
-        OrderRequest orderRequest = createConvertOrderDto();
+        //이메일로 멤버 찾기 unique
+        List<Long> orderItemIdList = new ArrayList<>();
+
+        orderItemIdList.add(1L);
+
+        OrderRequest orderRequest = OrderRequest.builder()
+                .memberId(1L)
+                .orderItemIdList(orderItemIdList)
+                .address("seoul")
+                .orderDate(LocalDateTime.now())
+                .build();
 
         OrderResponse orderResponse = orderService.placeOrder(orderRequest);
 
@@ -51,29 +92,28 @@ public class OrderServiceTest {
         assertThat(order.getOrderItems().size()).isEqualTo(orderResponse.getOrderItemIdList().size());
     }
 
-    private OrderRequest createConvertOrderDto() {
-        Member member = new Member("dp", "seoul");
-        Item item = new Item("jpaBook", 20000, 10);
-        Item item2 = new Item("springBook", 20000, 10);
-        OrderItem orderItem = new OrderItem(item, 3, 60000);
-        OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
-
+    @DisplayName(value = "orderId, memberId 값 유효하면 취소 성공 ")
+    @Test
+    void t2() {
+        OrderItem orderItem = orderItemRepository.findAll().get(0);
         List<Long> orderItemIdList = new ArrayList<>();
-
-        Member saveMember = memberRepository.save(member);
-        itemRepository.save(item);
-        itemRepository.save(item2);
-        orderItemRepository.save(orderItem);
-        orderItemRepository.save(orderItem2);
-
         orderItemIdList.add(orderItem.getId());
-        orderItemIdList.add(orderItem2.getId());
 
-        return OrderRequest.builder()
-                .memberId(saveMember.getId())
+        OrderRequest orderRequest = OrderRequest.builder()
+                .memberId(1L)
                 .orderItemIdList(orderItemIdList)
-                .address(member.getAddress())
+                .address("seoul")
                 .orderDate(LocalDateTime.now())
                 .build();
+
+        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
+        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
+
+        Order order = orderRepository.findByOrderItemsId(orderItemId);
+        Long memberId = orderResponse.getMemberId();
+
+        orderService.cancel(order.getId(), memberId);
+
+        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 }
