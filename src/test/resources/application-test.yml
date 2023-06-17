@@ -1,17 +1,12 @@
 spring:
   datasource:
+    driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:test
-    driverClassName: org.h2.Driver
-    username: sa
+    username: root
     password:
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: create
-    properties:
-      hibernate:
-        format_sql: true
 
-logging.level:
-  org.hibernate.SQL: debug
-  org.hibernate.type: trace
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
