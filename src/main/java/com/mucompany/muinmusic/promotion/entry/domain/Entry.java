@@ -1,0 +1,35 @@
+package com.mucompany.muinmusic.promotion.entry.domain;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Entity
+public class Entry {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column
+    private Long id;
+
+    @Column
+    private long memberId;
+
+    @Column
+    private String promotionCode;
+
+    @Column
+    private LocalDateTime enteredAt;
+
+    protected Entry() {
+
+    }
+
+    public Entry(long memberId, String promotionCode, LocalDateTime requestedAt) {
+        this.memberId = memberId;
+        this.promotionCode = promotionCode;
+        this.enteredAt = requestedAt;
+    }
+}
