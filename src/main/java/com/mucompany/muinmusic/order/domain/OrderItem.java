@@ -1,12 +1,7 @@
 package com.mucompany.muinmusic.order.domain;
 
 import com.mucompany.muinmusic.Item.domain.Item;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,6 +17,7 @@ public class OrderItem {
     private Long id;
 
     @OneToOne
+    @JoinColumn(name = "item_id", insertable = false, updatable = false)  // 외래 키를 생성하지 않고 값만 저장
     private Item item;
 
     @Column(nullable = false)
