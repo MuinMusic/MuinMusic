@@ -67,17 +67,24 @@ public class OrderServiceImpl implements OrderService {
         order.cancel();
     }
 
-    private void validate(List<Long> orderItemIdList, List<OrderItem> orderItemList) {
+    @Transactional
+    public void validate(List<Long> orderItemIdList, List<OrderItem> orderItemList) {
         for (Long orderItemId : orderItemIdList) {
             OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new OrderItemNotFoundException());
 
-            Item item = itemRepository.findById(orderItem.getItem().getId()).orElseThrow(() -> new ItemNotFoundException());
+            //todo 컨트롤러 테스트중 pessimisticLock 걸었더니 itemNotFound 예외가 안터져서 따로 추가
+            itemRepository.findById(orderItem.getItem().getId()).orElseThrow(() -> new ItemNotFoundException());
+            Item item = itemRepository.findByIdWithPessimisticLock(orderItem.getItem().getId());
 
             // 주문상품명과 ,가격 결제전에 변경되었는지 확인하기
             itemNameAndPriceCheck(orderItem, item);
 
             //수량 체크 및 변경 된 수량 업데이트
-            stockCheck(orderItem, item);
+            item.decrease(orderItem);
+            System.out.println("item.getStock() = " + item.getStock());
+
+            itemRepository.save(item);
+
             orderItemList.add(orderItem);
         }
     }
@@ -88,15 +95,6 @@ public class OrderServiceImpl implements OrderService {
         }
         if (orderItem.getItem().getPrice() != item.getPrice()) {
             throw new ItemPriceNotMatchException();
-        }
-    }
-
-    private void stockCheck(OrderItem orderItem, Item item) {
-        if (item.getStock() < orderItem.getCount()) {
-            throw new OutOfStockException();
-        } else {
-            item.decreaseStock(orderItem.getCount());
-            itemRepository.save(item);
         }
     }
 
