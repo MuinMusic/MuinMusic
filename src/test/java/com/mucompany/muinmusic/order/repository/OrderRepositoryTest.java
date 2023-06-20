@@ -43,16 +43,17 @@ public class OrderRepositoryTest {
         Member member = new Member("dp", "seoul");
         Item item = new Item("jpaBook", 20000, 10);
         Item item2 = new Item("springBook", 20000, 10);
-        OrderItem orderItem = new OrderItem(item, 3, 60000);
-        OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
-
-        List<OrderItem> orderItemList = new ArrayList<>();
-        orderItemList.add(orderItem);
-        orderItemList.add(orderItem2);
 
         memberRepository.save(member);
         itemRepository.save(item);
         itemRepository.save(item2);
+
+        OrderItem orderItem = new OrderItem(item.getId(), 3, 60000);
+        OrderItem orderItem2 = new OrderItem(item2.getId(), 1, 20000);
+
+        List<OrderItem> orderItemList = new ArrayList<>();
+        orderItemList.add(orderItem);
+        orderItemList.add(orderItem2);
         orderItemRepository.save(orderItem);
         orderItemRepository.save(orderItem2);
 
