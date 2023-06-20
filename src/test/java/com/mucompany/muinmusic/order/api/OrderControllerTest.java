@@ -36,7 +36,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
 @ActiveProfiles("test")
 public class OrderControllerTest {
 
@@ -64,6 +63,7 @@ public class OrderControllerTest {
         jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE order_item ALTER COLUMN id RESTART WITH 1");
     }
+
     @BeforeEach
     void setup() {
         h2DBResetAutoIncrement();
@@ -71,16 +71,18 @@ public class OrderControllerTest {
         Member member = new Member("dp", "seoul");
         Item item = new Item("jpaBook", 20000, 10);
         Item item2 = new Item("springBook", 20000, 10);
-        OrderItem orderItem = new OrderItem(item, 3, 60000);
-        OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
 
         memberRepository.save(member);
         itemRepository.save(item);
         itemRepository.save(item2);
+
+        OrderItem orderItem = new OrderItem(item.getId(), 3, 60000);
+        OrderItem orderItem2 = new OrderItem(item2.getId(), 1, 20000);
         orderItemRepository.save(orderItem);
         orderItemRepository.save(orderItem2);
     }
 
+    @Transactional
     @DisplayName(value = "orderRequestDto값 유효하면 http응답 201, 객체 반환 성공")
     @Test
     void t1() throws Exception {
@@ -97,6 +99,7 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$..orderDate").exists());
     }
 
+    @Transactional
     @DisplayName(value = "orderRequestDto.memberId로 member 찾지 못할 경우 MemberNotFoundException 발생 및 HTTP404 응답")
     @Test
     void t2() throws Exception {
@@ -121,6 +124,7 @@ public class OrderControllerTest {
                 });
     }
 
+    @Transactional
     @DisplayName(value = "orderRequestDto.orderItemIdList 로 orderItem 찾지 못할 경우 OrderItemNotFoundException 발생 및 HTTP404 응답")
     @Test
     void t3() throws Exception {
@@ -145,6 +149,7 @@ public class OrderControllerTest {
                 });
     }
 
+    @Transactional
     @DisplayName(value = "주문하려는 Item 상품 없을 시 ItemNotFoundException 발생 및 HTTP404 응답")
     @Test
     void t4() throws Exception {
@@ -154,7 +159,9 @@ public class OrderControllerTest {
         List<Item> item = new ArrayList<>();
         for (Long orderItemId : orderItemIdList) {
             OrderItem result = orderItemRepository.findById(orderItemId).orElseThrow(OrderItemNotFoundException::new);
-            item.add(result.getItem());
+            Long itemId = result.getItemId();
+            Item findItem = itemRepository.findById(itemId).orElseThrow();
+            item.add(findItem);
         }
         itemRepository.delete(item.get(1));
 
@@ -170,6 +177,7 @@ public class OrderControllerTest {
                 });
     }
 
+    @Transactional
     @DisplayName(value = "주문하려는 Item의 재고수량 초과했을경우 OutOfStockException 발생 및 HTTP404 응답")
     @Test
     void t5() throws Exception {
@@ -177,7 +185,7 @@ public class OrderControllerTest {
         Item book = new Item("개구리책", 20000, 5);
         itemRepository.save(book);
         //6개를 주문한다면
-        OrderItem orderItem = new OrderItem(book, 6, 120000);
+        OrderItem orderItem = new OrderItem(book.getId(), 6, 120000);
         orderItemRepository.save(orderItem);
 
         List<Long> orderItemIdList = List.of(orderItem.getId());
@@ -201,6 +209,7 @@ public class OrderControllerTest {
                 });
     }
 
+    @Transactional
     @DisplayName(value = "orderId,userId 값 유효하면 주문 취소 성공")
     @Test
     void t6() throws Exception {
@@ -216,6 +225,7 @@ public class OrderControllerTest {
                 .andExpect(status().isNoContent());
     }
 
+    @Transactional
     @DisplayName(value = "주문 취소 시 주문자와 로그인한 회원이 일치하지 않을 경우 NotMatchTheOrdererException 발생")
     @Test
     void t7() throws Exception {
@@ -240,6 +250,7 @@ public class OrderControllerTest {
                 });
     }
 
+    @Transactional
     @DisplayName(value = "주문취소 시 주문한 상품을 찾을 수 없는 경우 OrderNotFoundException 발생")
     @Test
     void t8() throws Exception {
@@ -261,6 +272,7 @@ public class OrderControllerTest {
                 });
     }
 
+    @Transactional
     @DisplayName(value = "주문취소 시 이미 상품이 배송중일 경우 OrderCancellationException 발생")
     @Test
     void t9() throws Exception {
@@ -303,7 +315,7 @@ public class OrderControllerTest {
         Member member = memberRepository.findById(1L).orElseThrow(MemberNotFoundException::new);
 
         return OrderRequestDto.builder()
-                .memberId(member.getId())
+                .memberId(1L)
                 .orderItemIdList(orderItemIdList)
                 .address(member.getAddress())
                 .orderDate(LocalDateTime.now())
