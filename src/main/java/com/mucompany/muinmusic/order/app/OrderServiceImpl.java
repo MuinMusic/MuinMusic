@@ -56,7 +56,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponse placeOrder2(OrderRequest orderRequest) {
+    public OrderResponse placeOrderWithoutLock(OrderRequest orderRequest) {
         //회원 유효한지 체크
         Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(() -> new MemberNotFoundException());
 
@@ -64,7 +64,7 @@ public class OrderServiceImpl implements OrderService {
         List<Long> orderItemIdList = orderRequest.getOrderItemIdList();
         List<OrderItem> orderItemList = new ArrayList<>();
 
-        decrease2(orderItemIdList);
+        decreaseWithoutLock(orderItemIdList);
 
         //상품이름,가격 체크
         validate(orderItemIdList, orderItemList);
@@ -124,7 +124,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public void decrease2(List<Long> orderItemIdList) {
+    public void decreaseWithoutLock(List<Long> orderItemIdList) {
         for (Long orderItemId : orderItemIdList) {
             OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new OrderItemNotFoundException());
 

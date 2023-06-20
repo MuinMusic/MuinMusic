@@ -16,13 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -163,7 +161,7 @@ public class OrderServiceTest {
                 List<Long> orderItemIdList = new ArrayList<>();
                 orderItemIdList.add(orderItem.getId());
 
-                orderService.decrease2(orderItemIdList);
+                orderService.decreaseWithoutLock(orderItemIdList);
 
                 latch.countDown();
             });
@@ -237,7 +235,7 @@ public class OrderServiceTest {
                         .orderDate(LocalDateTime.now())
                         .build();
 
-                orderService.placeOrder2(orderRequest);
+                orderService.placeOrderWithoutLock(orderRequest);
 
                 latch.countDown();
             });
