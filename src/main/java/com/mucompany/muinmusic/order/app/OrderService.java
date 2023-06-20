@@ -8,7 +8,11 @@ public interface OrderService {
 
     OrderResponse placeOrder(OrderRequest orderRequest);
 
+    OrderResponse placeOrder2(OrderRequest orderRequest);
+
     void cancel(Long orderId, Long memberId);
 
-    void validate(List<Long> orderItemIdList, List<OrderItem> orderItemList);
+    void decrease(List<Long> orderItemIdList);
+
+    void decrease2(List<Long> orderItemIdList);
 }

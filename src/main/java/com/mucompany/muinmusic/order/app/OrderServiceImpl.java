@@ -38,7 +38,35 @@ public class OrderServiceImpl implements OrderService {
         List<Long> orderItemIdList = orderRequest.getOrderItemIdList();
         List<OrderItem> orderItemList = new ArrayList<>();
 
-        //상품이름,가격,재고수량 체크
+        decrease(orderItemIdList);
+
+        //상품이름,가격 체크
+        validate(orderItemIdList, orderItemList);
+
+        Order order = createOrder(orderRequest, member, orderItemList);
+        orderRepository.save(order);
+
+        //결제 결과를 확인하고 주문상태를 변경한다. ORDER -> PAYMENT_COMPLETED
+        OrderStatus orderStatus = order.getOrderStatus();
+        if (paymentService.completePayment()) {
+            orderStatus = order.payed();
+        }
+        return new OrderResponse(orderRequest, orderStatus);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse placeOrder2(OrderRequest orderRequest) {
+        //회원 유효한지 체크
+        Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(() -> new MemberNotFoundException());
+
+        //주문 아이템 존재여부 체크
+        List<Long> orderItemIdList = orderRequest.getOrderItemIdList();
+        List<OrderItem> orderItemList = new ArrayList<>();
+
+        decrease2(orderItemIdList);
+
+        //상품이름,가격 체크
         validate(orderItemIdList, orderItemList);
 
         Order order = createOrder(orderRequest, member, orderItemList);
@@ -72,28 +100,52 @@ public class OrderServiceImpl implements OrderService {
         for (Long orderItemId : orderItemIdList) {
             OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new OrderItemNotFoundException());
 
-            //todo 컨트롤러 테스트중 pessimisticLock 걸었더니 itemNotFound 예외가 안터져서 따로 추가
-            itemRepository.findById(orderItem.getItem().getId()).orElseThrow(() -> new ItemNotFoundException());
-            Item item = itemRepository.findByIdWithPessimisticLock(orderItem.getItem().getId());
+            Item item = itemRepository.findByIdWithPessimisticLock(orderItem.getItemId()).orElseThrow(() -> new ItemNotFoundException());
 
             // 주문상품명과 ,가격 결제전에 변경되었는지 확인하기
             itemNameAndPriceCheck(orderItem, item);
+
+            orderItemList.add(orderItem);
+        }
+    }
+    @Transactional
+    public void decrease(List<Long> orderItemIdList) {
+        for (Long orderItemId : orderItemIdList) {
+            OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new OrderItemNotFoundException());
+
+            Item item = itemRepository.findByIdWithPessimisticLock(orderItem.getItemId()).orElseThrow(() -> new ItemNotFoundException());
 
             //수량 체크 및 변경 된 수량 업데이트
             item.decrease(orderItem);
             System.out.println("item.getStock() = " + item.getStock());
 
             itemRepository.save(item);
-
-            orderItemList.add(orderItem);
         }
     }
 
-    private static void itemNameAndPriceCheck(OrderItem orderItem, Item item) {
-        if (!orderItem.getItem().getName().equals(item.getName())) {
+    @Transactional
+    public void decrease2(List<Long> orderItemIdList) {
+        for (Long orderItemId : orderItemIdList) {
+            OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new OrderItemNotFoundException());
+
+            Item item = itemRepository.findById(orderItem.getItemId()).orElseThrow(() -> new ItemNotFoundException());
+
+            //수량 체크 및 변경 된 수량 업데이트
+            item.decrease(orderItem);
+            System.out.println("item.getStock() = " + item.getStock());
+
+            itemRepository.save(item);
+        }
+    }
+
+    private void itemNameAndPriceCheck(OrderItem orderItem, Item item) {
+        Long itemId = orderItem.getItemId();
+        Item findItem = itemRepository.findById(itemId).orElseThrow();
+
+        if (!findItem.getName().equals(item.getName())) {
             throw new ItemNameNotMatchException();
         }
-        if (orderItem.getItem().getPrice() != item.getPrice()) {
+        if (findItem.getPrice() != item.getPrice()) {
             throw new ItemPriceNotMatchException();
         }
     }
