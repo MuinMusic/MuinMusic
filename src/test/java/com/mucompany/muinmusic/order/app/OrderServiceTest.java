@@ -11,10 +11,7 @@ import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -25,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @SpringBootTest
-@Transactional
 @ActiveProfiles("test")
 public class OrderServiceTest {
 
@@ -50,9 +47,6 @@ public class OrderServiceTest {
     private OrderItemRepository orderItemRepository;
     @Autowired
     private JdbcTemplate jdbcTemplate;
-    @Autowired
-    private StockService stockService;
-
 
     private void h2DBResetAutoIncrement() {
         jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
@@ -67,17 +61,23 @@ public class OrderServiceTest {
 
         Member member = new Member("dp", "seoul");
         Item item = new Item("jpaBook", 20000, 100);
-        Item item2 = new Item("springBook", 20000, 100);
-        OrderItem orderItem = new OrderItem(item, 1, 60000);
-        OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
 
         memberRepository.save(member);
         itemRepository.save(item);
-        itemRepository.save(item2);
+
+        OrderItem orderItem = new OrderItem(item.getId(), 1, 60000);
         orderItemRepository.save(orderItem);
-//        orderItemRepository.save(orderItem2);
     }
 
+    @AfterEach
+    void deleteAll() {
+        orderRepository.deleteAll();
+        orderItemRepository.deleteAll();
+        itemRepository.deleteAll();
+        memberRepository.deleteAll();
+    }
+
+    @Transactional
     @DisplayName(value = "OrderRequest 값 유효하면 주문 저장 성공 및 OrderResponse 반환 성공")
     @Test
     void t1() {
@@ -93,10 +93,12 @@ public class OrderServiceTest {
         assertThat(item.getStock()).isEqualTo(99);
     }
 
+    @Transactional
     @DisplayName(value = "orderId, memberId 값 유효하면 취소 성공 ")
     @Test
     void t2() {
         OrderResponse orderResponse = orderSave();
+        System.out.println("t2" + orderResponse.getMemberId());
 
         Long orderItemId = orderResponse.getOrderItemIdList().get(0);
 
@@ -108,10 +110,9 @@ public class OrderServiceTest {
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
-    @Disabled
     @DisplayName(value = "pessimisticLock 적용, 동시성 성공")
     @Test
-    public void 동시에_100명이_주문5() throws InterruptedException {
+    public void 동시에_100명이_주문() throws InterruptedException {
         int threadCount = 100;
         Item item = new Item("ticket", 20000, 100);
         itemRepository.save(item);
@@ -121,13 +122,17 @@ public class OrderServiceTest {
 
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
-                OrderItem orderItem = new OrderItem(item, 1, 60000);
+                OrderItem orderItem = new OrderItem(item.getId(), 1, 60000);
                 orderItemRepository.save(orderItem);
 
                 List<Long> orderItemIdList = new ArrayList<>();
                 orderItemIdList.add(orderItem.getId());
+                try {
+                    orderService.decrease(orderItemIdList);
 
-                stockService.decrease(item.getId(), orderItem);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
                 latch.countDown();
             });
         }
@@ -139,10 +144,9 @@ public class OrderServiceTest {
         assertEquals(0, item2.getStock());
     }
 
-    @Disabled
     @DisplayName(value = "pessimisticLock 적용 안할경우 동시성 실패 테스트")
     @Test
-    public void 동시에_100명이_주문6() throws InterruptedException {
+    public void 동시에_100명이_주문2() throws InterruptedException {
         int threadCount = 100;
         List<OrderItem> orderItemList = new ArrayList<>();
         Item item = new Item("jpaBook", 20000, 100);
@@ -153,13 +157,14 @@ public class OrderServiceTest {
 
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
-                OrderItem orderItem = new OrderItem(item, 1, 60000);
+                OrderItem orderItem = new OrderItem(item.getId(), 1, 60000);
                 orderItemRepository.save(orderItem);
 
                 List<Long> orderItemIdList = new ArrayList<>();
                 orderItemIdList.add(orderItem.getId());
 
-                stockService.decrease2(item.getId(), orderItem);
+                orderService.decrease2(orderItemIdList);
+
                 latch.countDown();
             });
         }
@@ -172,27 +177,31 @@ public class OrderServiceTest {
         int actualStock = item2.getStock();
         assertNotEquals(expectedStock, actualStock);
     }
-    @Disabled("실행 시 무한로딩")
-    @DisplayName(value = "기존코드에 동시성 적용시키기 ")
+
+    @DisplayName(value = "기존코드에 orderService.place() 동시성 적용시키기 ")
     @Test
-    public void 동시에_100명이_주문7() throws InterruptedException {
+    public void 동시에_100명이_주문3() throws InterruptedException {
         int threadCount = 100;
-        List<OrderItem> orderItemList = new ArrayList<>();
-        Item item = new Item("ticket", 20000, 100);
-        itemRepository.save(item);
 
         ExecutorService executorService = Executors.newFixedThreadPool(32);
         CountDownLatch latch = new CountDownLatch(threadCount);
 
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
-                OrderItem orderItem = new OrderItem(item, 1, 60000);
+                OrderItem orderItem = new OrderItem(1L, 1, 60000);
                 orderItemRepository.save(orderItem);
 
                 List<Long> orderItemIdList = new ArrayList<>();
                 orderItemIdList.add(orderItem.getId());
 
-                orderService.validate(orderItemIdList, orderItemList);
+                OrderRequest orderRequest = OrderRequest.builder()
+                        .memberId(1L)
+                        .orderItemIdList(orderItemIdList)
+                        .address("seoul")
+                        .orderDate(LocalDateTime.now())
+                        .build();
+
+                orderService.placeOrder(orderRequest);
 
                 latch.countDown();
             });
@@ -200,11 +209,48 @@ public class OrderServiceTest {
 
         latch.await();
 
-        Item findItem = itemRepository.findById(item.getId()).orElseThrow(() -> new ItemNotFoundException());
+        Item findItem = itemRepository.findById(1L).orElseThrow(() -> new ItemNotFoundException());
 
         assertEquals(0, findItem.getStock());
     }
 
+    @DisplayName(value = "pessimisticLock 적용 안할경우 orderService.place() 동시성 실패 테스트")
+    @Test
+    public void 동시에_100명이_주문4() throws InterruptedException {
+        int threadCount = 100;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+                OrderItem orderItem = new OrderItem(1L, 1, 60000);
+                orderItemRepository.save(orderItem);
+
+                List<Long> orderItemIdList = new ArrayList<>();
+                orderItemIdList.add(orderItem.getId());
+
+                OrderRequest orderRequest = OrderRequest.builder()
+                        .memberId(1L)
+                        .orderItemIdList(orderItemIdList)
+                        .address("seoul")
+                        .orderDate(LocalDateTime.now())
+                        .build();
+
+                orderService.placeOrder2(orderRequest);
+
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+
+        Item findItem = itemRepository.findById(1L).orElseThrow(() -> new ItemNotFoundException());
+
+        int expectedStock = 0;
+        int actualStock = findItem.getStock();
+        assertNotEquals(expectedStock, actualStock);
+    }
 
     private OrderResponse orderSave() {
         List<Long> orderItemIdList = new ArrayList<>();
