@@ -4,9 +4,13 @@ import java.util.List;
 
 public interface OrderService {
 
-    OrderResponse placeOrder(OrderRequest orderRequest);
+    OrderResponse placeOrderWithRedissonLock(OrderRequest orderRequest);
 
-    OrderResponse placeOrderWithoutLock(OrderRequest orderRequest);
+    OrderResponse placeOrderWithoutRedissonLock(OrderRequest orderRequest);
+
+    OrderResponse placeOrderWithoutPessimisticLock(OrderRequest orderRequest);
+
+    OrderResponse placeOrderWithPessimisticLock(OrderRequest orderRequest);
 
     void cancel(Long orderId, Long memberId);
 

@@ -3,6 +3,7 @@ package com.mucompany.muinmusic.order.app;
 import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
 import com.mucompany.muinmusic.exception.*;
+import com.mucompany.muinmusic.facade.RedissonLockFacade;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
@@ -27,10 +28,34 @@ public class OrderServiceImpl implements OrderService {
     private final ItemRepository itemRepository;
     private final OrderItemRepository orderItemRepository;
     private final PaymentService paymentService;
+    private final RedissonLockFacade redissonLockFacade;
 
     @Override
-    @Transactional
-    public OrderResponse placeOrder(OrderRequest orderRequest) {
+    public OrderResponse placeOrderWithRedissonLock(OrderRequest orderRequest) {
+        //회원 유효한지 체크
+        Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(() -> new MemberNotFoundException());
+
+        List<Long> orderItemIdList = orderRequest.getOrderItemIdList();
+        List<OrderItem> orderItemList = new ArrayList<>();
+
+        //상품이름,가격 체크
+        validate(orderItemIdList, orderItemList);
+
+        Order order = createOrder(orderRequest, member, orderItemList);
+        orderRepository.save(order);
+
+        redissonLockFacade.decreaseRedissonLock(orderItemIdList);
+
+        //결제 결과를 확인하고 주문상태를 변경한다. ORDER -> PAYMENT_COMPLETED
+        OrderStatus orderStatus = order.getOrderStatus();
+        if (paymentService.completePayment()) {
+            orderStatus = order.payed();
+        }
+        return new OrderResponse(orderRequest, orderStatus);
+    }
+
+    @Override
+    public OrderResponse placeOrderWithoutRedissonLock(OrderRequest orderRequest) {
         //회원 유효한지 체크
         Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(() -> new MemberNotFoundException());
 
@@ -38,9 +63,33 @@ public class OrderServiceImpl implements OrderService {
         List<Long> orderItemIdList = orderRequest.getOrderItemIdList();
         List<OrderItem> orderItemList = new ArrayList<>();
 
+        //상품이름,가격 체크
+        validate(orderItemIdList, orderItemList);
+
+        Order order = createOrder(orderRequest, member, orderItemList);
+        orderRepository.save(order);
+
+        decreaseWithoutLock(orderItemIdList);
+
+        //결제 결과를 확인하고 주문상태를 변경한다. ORDER -> PAYMENT_COMPLETED
+        OrderStatus orderStatus = order.getOrderStatus();
+        if (paymentService.completePayment()) {
+            orderStatus = order.payed();
+        }
+        return new OrderResponse(orderRequest, orderStatus);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse placeOrderWithPessimisticLock(OrderRequest orderRequest) {
+        //회원 유효한지 체크
+        Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(() -> new MemberNotFoundException());
+
+        List<Long> orderItemIdList = orderRequest.getOrderItemIdList();
+        List<OrderItem> orderItemList = new ArrayList<>();
+
         decrease(orderItemIdList);
 
-        //상품이름,가격 체크
         validate(orderItemIdList, orderItemList);
 
         Order order = createOrder(orderRequest, member, orderItemList);
@@ -56,17 +105,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponse placeOrderWithoutLock(OrderRequest orderRequest) {
+    public OrderResponse placeOrderWithoutPessimisticLock(OrderRequest orderRequest) {
         //회원 유효한지 체크
         Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(() -> new MemberNotFoundException());
 
-        //주문 아이템 존재여부 체크
         List<Long> orderItemIdList = orderRequest.getOrderItemIdList();
         List<OrderItem> orderItemList = new ArrayList<>();
 
         decreaseWithoutLock(orderItemIdList);
 
-        //상품이름,가격 체크
         validate(orderItemIdList, orderItemList);
 
         Order order = createOrder(orderRequest, member, orderItemList);
@@ -95,12 +142,11 @@ public class OrderServiceImpl implements OrderService {
         order.cancel();
     }
 
-    @Transactional
     public void validate(List<Long> orderItemIdList, List<OrderItem> orderItemList) {
         for (Long orderItemId : orderItemIdList) {
             OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new OrderItemNotFoundException());
 
-            Item item = itemRepository.findByIdWithPessimisticLock(orderItem.getItemId()).orElseThrow(() -> new ItemNotFoundException());
+            Item item = itemRepository.findById(orderItem.getItemId()).orElseThrow(() -> new ItemNotFoundException());
 
             // 주문상품명과 ,가격 결제전에 변경되었는지 확인하기
             itemNameAndPriceCheck(orderItem, item);
@@ -108,15 +154,15 @@ public class OrderServiceImpl implements OrderService {
             orderItemList.add(orderItem);
         }
     }
+
     @Transactional
     public void decrease(List<Long> orderItemIdList) {
         for (Long orderItemId : orderItemIdList) {
             OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new OrderItemNotFoundException());
-
             Item item = itemRepository.findByIdWithPessimisticLock(orderItem.getItemId()).orElseThrow(() -> new ItemNotFoundException());
 
             //수량 체크 및 변경 된 수량 업데이트
-            item.decrease(orderItem);
+            item.decrease(orderItem.getCount());
             System.out.println("item.getStock() = " + item.getStock());
 
             itemRepository.save(item);
@@ -127,11 +173,10 @@ public class OrderServiceImpl implements OrderService {
     public void decreaseWithoutLock(List<Long> orderItemIdList) {
         for (Long orderItemId : orderItemIdList) {
             OrderItem orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new OrderItemNotFoundException());
-
             Item item = itemRepository.findById(orderItem.getItemId()).orElseThrow(() -> new ItemNotFoundException());
 
             //수량 체크 및 변경 된 수량 업데이트
-            item.decrease(orderItem);
+            item.decrease(orderItem.getCount());
             System.out.println("item.getStock() = " + item.getStock());
 
             itemRepository.save(item);
@@ -150,7 +195,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private static Order createOrder(OrderRequest orderRequest, Member member, List<OrderItem> orderItemList) {
+    public Order createOrder(OrderRequest orderRequest, Member member, List<OrderItem> orderItemList) {
         return Order.builder()
                 .member(member)
                 .orderItems(orderItemList)

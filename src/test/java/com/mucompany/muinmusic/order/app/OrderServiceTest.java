@@ -4,6 +4,7 @@ import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
 import com.mucompany.muinmusic.exception.ItemNotFoundException;
 import com.mucompany.muinmusic.exception.MemberNotFoundException;
+import com.mucompany.muinmusic.facade.RedissonLockFacade;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
@@ -45,6 +46,8 @@ public class OrderServiceTest {
     private OrderItemRepository orderItemRepository;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private RedissonLockFacade redissonLockFacade;
 
     private void h2DBResetAutoIncrement() {
         jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
@@ -108,77 +111,9 @@ public class OrderServiceTest {
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
-    @DisplayName(value = "pessimisticLock 적용, 동시성 성공")
+    @DisplayName(value = "placeOrder() -> pessimisticLock 적용, 동시성 성공")
     @Test
-    public void 동시에_100명이_주문() throws InterruptedException {
-        int threadCount = 100;
-        Item item = new Item("ticket", 20000, 100);
-        itemRepository.save(item);
-
-        ExecutorService executorService = Executors.newFixedThreadPool(32);
-        CountDownLatch latch = new CountDownLatch(threadCount);
-
-        for (int i = 0; i < threadCount; i++) {
-            executorService.submit(() -> {
-                OrderItem orderItem = new OrderItem(item.getId(), 1, 60000);
-                orderItemRepository.save(orderItem);
-
-                List<Long> orderItemIdList = new ArrayList<>();
-                orderItemIdList.add(orderItem.getId());
-                try {
-                    orderService.decrease(orderItemIdList);
-
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
-                latch.countDown();
-            });
-        }
-
-        latch.await();
-
-        Item item2 = itemRepository.findById(item.getId()).orElseThrow();
-
-        assertEquals(0, item2.getStock());
-    }
-
-    @DisplayName(value = "pessimisticLock 적용 안할경우 동시성 실패 테스트")
-    @Test
-    public void 동시에_100명이_주문2() throws InterruptedException {
-        int threadCount = 100;
-        List<OrderItem> orderItemList = new ArrayList<>();
-        Item item = new Item("jpaBook", 20000, 100);
-        itemRepository.save(item);
-
-        ExecutorService executorService = Executors.newFixedThreadPool(32);
-        CountDownLatch latch = new CountDownLatch(threadCount);
-
-        for (int i = 0; i < threadCount; i++) {
-            executorService.submit(() -> {
-                OrderItem orderItem = new OrderItem(item.getId(), 1, 60000);
-                orderItemRepository.save(orderItem);
-
-                List<Long> orderItemIdList = new ArrayList<>();
-                orderItemIdList.add(orderItem.getId());
-
-                orderService.decreaseWithoutLock(orderItemIdList);
-
-                latch.countDown();
-            });
-        }
-
-        latch.await();
-
-        Item item2 = itemRepository.findById(item.getId()).orElseThrow();
-
-        int expectedStock = 0;
-        int actualStock = item2.getStock();
-        assertNotEquals(expectedStock, actualStock);
-    }
-
-    @DisplayName(value = "기존코드에 orderService.place() 동시성 적용시키기 ")
-    @Test
-    public void 동시에_100명이_주문3() throws InterruptedException {
+    public void t3() throws InterruptedException {
         int threadCount = 100;
 
         ExecutorService executorService = Executors.newFixedThreadPool(32);
@@ -198,8 +133,12 @@ public class OrderServiceTest {
                         .address("seoul")
                         .orderDate(LocalDateTime.now())
                         .build();
+                try {
+                    orderService.placeOrderWithPessimisticLock(orderRequest);
 
-                orderService.placeOrder(orderRequest);
+                } catch (Exception e) {
+                    System.out.println("에러"+e);
+                }
 
                 latch.countDown();
             });
@@ -212,9 +151,9 @@ public class OrderServiceTest {
         assertEquals(0, findItem.getStock());
     }
 
-    @DisplayName(value = "pessimisticLock 적용 안할경우 orderService.place() 동시성 실패 테스트")
+    @DisplayName(value = "placeOrder() -> pessimisticLock 적용 안할경우 동시성 실패 테스트")
     @Test
-    public void 동시에_100명이_주문4() throws InterruptedException {
+    public void t4() throws InterruptedException {
         int threadCount = 100;
 
         ExecutorService executorService = Executors.newFixedThreadPool(32);
@@ -234,8 +173,12 @@ public class OrderServiceTest {
                         .address("seoul")
                         .orderDate(LocalDateTime.now())
                         .build();
+                try {
+                    orderService.placeOrderWithoutPessimisticLock(orderRequest);
 
-                orderService.placeOrderWithoutLock(orderRequest);
+                } catch (Exception e) {
+                    System.out.println("에러"+e);
+                }
 
                 latch.countDown();
             });
@@ -245,10 +188,89 @@ public class OrderServiceTest {
 
         Item findItem = itemRepository.findById(1L).orElseThrow(() -> new ItemNotFoundException());
 
-        int expectedStock = 0;
-        int actualStock = findItem.getStock();
-        assertNotEquals(expectedStock, actualStock);
+        assertNotEquals(0, findItem.getStock());
     }
+
+    @DisplayName(value = "placeOrder() -> orderService.place() redisson 동시성 적용시키기 ")
+    @Test
+    public void t5() throws InterruptedException {
+        int threadCount = 100;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+                OrderItem orderItem = new OrderItem(1L, 1, 60000);
+                orderItemRepository.save(orderItem);
+
+                List<Long> orderItemIdList = new ArrayList<>();
+                orderItemIdList.add(orderItem.getId());
+
+                OrderRequest orderRequest = OrderRequest.builder()
+                        .memberId(1L)
+                        .orderItemIdList(orderItemIdList)
+                        .address("seoul")
+                        .orderDate(LocalDateTime.now())
+                        .build();
+                try {
+                    orderService.placeOrderWithRedissonLock(orderRequest);
+
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+
+        Item findItem = itemRepository.findById(1L).orElseThrow(() -> new ItemNotFoundException());
+
+        assertEquals(0, findItem.getStock());
+    }
+
+    @DisplayName(value = "placeOrder() -> orderService.place() redisson 적용x 동시성 실패테스트 ")
+    @Test
+    public void t6() throws InterruptedException {
+        int threadCount = 100;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+                OrderItem orderItem = new OrderItem(1L, 1, 60000);
+                orderItemRepository.save(orderItem);
+
+                List<Long> orderItemIdList = new ArrayList<>();
+                orderItemIdList.add(orderItem.getId());
+
+                OrderRequest orderRequest = OrderRequest.builder()
+                        .memberId(1L)
+                        .orderItemIdList(orderItemIdList)
+                        .address("seoul")
+                        .orderDate(LocalDateTime.now())
+                        .build();
+                try {
+                    orderService.placeOrderWithoutRedissonLock(orderRequest);
+
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+
+        Item findItem = itemRepository.findById(1L).orElseThrow(() -> new ItemNotFoundException());
+
+        assertNotEquals(0, findItem.getStock());
+    }
+
 
     private OrderResponse orderSave() {
         List<Long> orderItemIdList = new ArrayList<>();
@@ -261,7 +283,7 @@ public class OrderServiceTest {
                 .orderDate(LocalDateTime.now())
                 .build();
 
-        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
+        OrderResponse orderResponse = orderService.placeOrderWithRedissonLock(orderRequest);
         return orderResponse;
     }
 }
