@@ -305,7 +305,7 @@ public class OrderControllerTest {
                 .orderDate(LocalDateTime.now())
                 .build();
 
-        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
+        OrderResponse orderResponse = orderService.placeOrderWithRedissonLock(orderRequest);
 
         return orderResponse;
     }

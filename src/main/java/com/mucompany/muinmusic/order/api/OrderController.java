@@ -25,7 +25,7 @@ public class OrderController {
 
         OrderRequest orderRequest = createOrderRequest(orderRequestDto);
 
-        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
+        OrderResponse orderResponse = orderService.placeOrderWithRedissonLock(orderRequest);
 
         OrderResponseDto orderResponseDto = new OrderResponseDto(orderResponse);
 

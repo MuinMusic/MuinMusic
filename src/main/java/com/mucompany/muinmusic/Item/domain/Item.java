@@ -1,12 +1,7 @@
 package com.mucompany.muinmusic.Item.domain;
 
 import com.mucompany.muinmusic.exception.OutOfStockException;
-import com.mucompany.muinmusic.order.domain.OrderItem;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -35,10 +30,10 @@ public class Item {
         this.stock = stock;
     }
 
-    public void decrease(OrderItem orderItem) {
-        if (this.stock < orderItem.getCount()) {
+    public void decrease(int count) {
+        if (this.stock < count) {
             throw new OutOfStockException();
         }
-        this.stock = this.stock - orderItem.getCount();
+        this.stock = this.stock - count;
     }
 }
