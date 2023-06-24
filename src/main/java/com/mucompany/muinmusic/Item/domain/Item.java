@@ -1,6 +1,6 @@
 package com.mucompany.muinmusic.Item.domain;
 
-import com.mucompany.muinmusic.exception.OutOfStockException;
+import com.mucompany.muinmusic.exception.InsufficientStockException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +32,7 @@ public class Item {
 
     public void decrease(int count) {
         if (this.stock < count) {
-            throw new OutOfStockException();
+            throw new InsufficientStockException();
         }
         this.stock = this.stock - count;
     }

@@ -8,7 +8,7 @@ import com.mucompany.muinmusic.exception.NotMatchTheOrdererException;
 import com.mucompany.muinmusic.exception.OrderCancellationException;
 import com.mucompany.muinmusic.exception.OrderItemNotFoundException;
 import com.mucompany.muinmusic.exception.OrderNotFoundException;
-import com.mucompany.muinmusic.exception.OutOfStockException;
+import com.mucompany.muinmusic.exception.InsufficientStockException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,8 +31,8 @@ public class GlobalExcceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
-    @ExceptionHandler(OutOfStockException.class)
-    public ResponseEntity<String> outOfStockException(OutOfStockException ex) {
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<String> outOfStockException(InsufficientStockException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
