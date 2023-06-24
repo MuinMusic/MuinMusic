@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
 import com.mucompany.muinmusic.exception.*;
+import com.mucompany.muinmusic.facade.RedissonLockFacade;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.app.OrderRequest;
@@ -55,6 +56,8 @@ public class OrderControllerTest {
     private OrderRepository orderRepository;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private RedissonLockFacade redissonLockFacade;
 
 
     private void h2DBResetAutoIncrement() {
@@ -204,7 +207,7 @@ public class OrderControllerTest {
                 .andExpect(result -> {
                     Throwable exception = result.getResolvedException();
                     assertNotNull(exception);
-                    assertEquals(OutOfStockException.class, exception.getClass());
+                    assertEquals(InsufficientStockException.class, exception.getClass());
                     assertEquals("상품의 재고가 부족합니다", exception.getMessage());
                 });
     }
@@ -305,7 +308,7 @@ public class OrderControllerTest {
                 .orderDate(LocalDateTime.now())
                 .build();
 
-        OrderResponse orderResponse = orderService.placeOrderWithRedissonLock(orderRequest);
+        OrderResponse orderResponse = redissonLockFacade.placeOrder(orderRequest);
 
         return orderResponse;
     }

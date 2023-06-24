@@ -1,22 +1,24 @@
-package com.mucompany.muinmusic.order.app;
+package com.mucompany.muinmusic.facade;
 
 import com.mucompany.muinmusic.Item.domain.Item;
 import com.mucompany.muinmusic.Item.repository.ItemRepository;
 import com.mucompany.muinmusic.exception.ItemNotFoundException;
+import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
-import com.mucompany.muinmusic.order.domain.Order;
+import com.mucompany.muinmusic.order.app.OrderRequest;
 import com.mucompany.muinmusic.order.domain.OrderItem;
-import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,26 +27,26 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @Slf4j
-public class OrderServiceTest {
+class RedissonLockFacadeTest {
 
-    @Autowired
-    private OrderService orderService;
-    @Autowired
-    private OrderRepository orderRepository;
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private ItemRepository itemRepository;
-    @Autowired
     private OrderItemRepository orderItemRepository;
     @Autowired
+    private ItemRepository itemRepository;
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private RedissonLockFacade redissonLockFacade;
 
     private void h2DBResetAutoIncrement() {
         jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
@@ -58,7 +60,7 @@ public class OrderServiceTest {
         h2DBResetAutoIncrement();
 
         Member member = new Member("dp", "seoul");
-        Item item = new Item("jpaBook", 20000, 100);
+        Item item = new Item("jpaBook", 20000, 20);
 
         memberRepository.save(member);
         itemRepository.save(item);
@@ -75,23 +77,9 @@ public class OrderServiceTest {
         memberRepository.deleteAll();
     }
 
-    @Transactional
-    @DisplayName(value = "orderId, memberId 값 유효하면 취소 성공 ")
+    @DisplayName(value = "placeOrder() -> orderService.place() redisson 동시성 적용시키기 ")
     @Test
-    void t2() {
-        orderSave();
-
-        Order order = orderRepository.findById(1L).orElseThrow();
-
-        orderService.cancel(order.getId(), order.getMember().getId());
-
-        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
-    }
-
-    @Disabled
-    @DisplayName(value = "placeOrder() -> pessimisticLock 적용, 동시성 성공")
-    @Test
-    public void t3() throws InterruptedException {
+    public void t1() throws InterruptedException {
         int threadCount = 100;
 
         ExecutorService executorService = Executors.newFixedThreadPool(32);
@@ -112,10 +100,10 @@ public class OrderServiceTest {
                         .orderDate(LocalDateTime.now())
                         .build();
                 try {
-                    orderService.placeOrder(orderRequest);
+                    redissonLockFacade.placeOrder(orderRequest);
 
                 } catch (Exception e) {
-                    log.error(e.getMessage());
+                    System.out.println(e);
                 }
 
                 latch.countDown();
@@ -129,22 +117,45 @@ public class OrderServiceTest {
         assertEquals(0, findItem.getStock());
     }
 
-    private void orderSave() {
+    @DisplayName(value = "초과 주문하면 실패")
+    @Test
+    public void t2() throws InterruptedException {
+        int threadCount = 101;
 
-        Member member = memberRepository.findById(1L).orElseThrow();
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+        CountDownLatch latch = new CountDownLatch(threadCount);
 
-        OrderItem orderItem = orderItemRepository.findById(1L).orElseThrow();
-        List<OrderItem> orderItemList = new ArrayList<>();
-        orderItemList.add(orderItem);
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+                OrderItem orderItem = new OrderItem(1L, 1, 60000);
+                orderItemRepository.save(orderItem);
 
-        Order order = Order.builder()
-                .member(member)
-                .orderItems(orderItemList)
-                .address("seoul")
-                .orderDate(LocalDateTime.now())
-                .orderStatus(OrderStatus.ORDERED)
-                .build();
+                List<Long> orderItemIdList = new ArrayList<>();
+                orderItemIdList.add(orderItem.getId());
 
-        orderRepository.save(order);
+                OrderRequest orderRequest = OrderRequest.builder()
+                        .memberId(1L)
+                        .orderItemIdList(orderItemIdList)
+                        .address("seoul")
+                        .orderDate(LocalDateTime.now())
+                        .build();
+                try {
+
+                    redissonLockFacade.placeOrder(orderRequest);
+
+                } catch (Exception e) {
+                    log.error("Exception occurred: {}", e.getMessage());
+                }
+
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+
+        assertThrows(OrderNotFoundException.class, () -> {
+            orderRepository.findById(101L).orElseThrow(() -> new OrderNotFoundException());
+        });
     }
 }
+

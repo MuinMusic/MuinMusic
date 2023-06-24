@@ -1,17 +1,13 @@
 package com.mucompany.muinmusic.order.api;
 
+import com.mucompany.muinmusic.facade.RedissonLockFacade;
 import com.mucompany.muinmusic.order.app.OrderRequest;
 import com.mucompany.muinmusic.order.app.OrderResponse;
 import com.mucompany.muinmusic.order.app.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(value = "/api")
@@ -19,13 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderService orderService;
+    private final RedissonLockFacade redissonLockFacade;
 
     @PostMapping(value = "/orders")
     public ResponseEntity<OrderResponseDto> create(@RequestBody OrderRequestDto orderRequestDto) {
 
         OrderRequest orderRequest = createOrderRequest(orderRequestDto);
 
-        OrderResponse orderResponse = orderService.placeOrderWithRedissonLock(orderRequest);
+        OrderResponse orderResponse = redissonLockFacade.placeOrder(orderRequest);
 
         OrderResponseDto orderResponseDto = new OrderResponseDto(orderResponse);
 
