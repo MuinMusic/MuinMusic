@@ -1,7 +1,7 @@
 package com.mucompany.muinmusic.facade;
 
-import com.mucompany.muinmusic.Item.domain.Item;
-import com.mucompany.muinmusic.Item.repository.ItemRepository;
+import com.mucompany.muinmusic.item.domain.Item;
+import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.exception.ItemNotFoundException;
 import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import com.mucompany.muinmusic.member.domain.Member;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @ActiveProfiles("test")
 @Slf4j
-class RedissonLockFacadeTest {
+class RedissonOrderServiceTest {
 
     @Autowired
     private MemberRepository memberRepository;
@@ -46,9 +46,9 @@ class RedissonLockFacadeTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
-    private RedissonLockFacade redissonLockFacade;
+    private RedissonOrderService redissonOrderService;
 
-    private void h2DBResetAutoIncrement() {
+    private void h2ResetAutoIncrement() {
         jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE orders ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
@@ -57,13 +57,17 @@ class RedissonLockFacadeTest {
 
     @BeforeEach
     void setup() {
-        h2DBResetAutoIncrement();
+        h2ResetAutoIncrement();
 
         Member member = new Member("dp", "seoul");
-        Item item = new Item("jpaBook", 20000, 20);
+        Item item = new Item("jpaBook", 20000, 100);
+        Item item2 = new Item("jpaBook2", 20000, 100);
+        Item item3 = new Item("jpaBook3", 20000, 100);
 
         memberRepository.save(member);
         itemRepository.save(item);
+        itemRepository.save(item2);
+        itemRepository.save(item3);
 
         OrderItem orderItem = new OrderItem(item.getId(), 1, 60000);
         orderItemRepository.save(orderItem);
@@ -81,17 +85,22 @@ class RedissonLockFacadeTest {
     @Test
     public void t1() throws InterruptedException {
         int threadCount = 100;
-
         ExecutorService executorService = Executors.newFixedThreadPool(32);
         CountDownLatch latch = new CountDownLatch(threadCount);
 
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 OrderItem orderItem = new OrderItem(1L, 1, 60000);
+                OrderItem orderItem2 = new OrderItem(2L, 1, 60000);
+                OrderItem orderItem3 = new OrderItem(3L, 1, 60000);
                 orderItemRepository.save(orderItem);
+                orderItemRepository.save(orderItem2);
+                orderItemRepository.save(orderItem3);
 
                 List<Long> orderItemIdList = new ArrayList<>();
                 orderItemIdList.add(orderItem.getId());
+                orderItemIdList.add(orderItem2.getId());
+                orderItemIdList.add(orderItem3.getId());
 
                 OrderRequest orderRequest = OrderRequest.builder()
                         .memberId(1L)
@@ -100,21 +109,20 @@ class RedissonLockFacadeTest {
                         .orderDate(LocalDateTime.now())
                         .build();
                 try {
-                    redissonLockFacade.placeOrder(orderRequest);
-
+                    redissonOrderService.placeOrder(orderRequest);
                 } catch (Exception e) {
-                    System.out.println(e);
+                    log.info("exception = " + e);
                 }
-
                 latch.countDown();
             });
         }
-
         latch.await();
-
         Item findItem = itemRepository.findById(1L).orElseThrow(() -> new ItemNotFoundException());
-
+        Item findItem2 = itemRepository.findById(2L).orElseThrow(() -> new ItemNotFoundException());
+        Item findItem3 = itemRepository.findById(3L).orElseThrow(() -> new ItemNotFoundException());
         assertEquals(0, findItem.getStock());
+        assertEquals(0, findItem2.getStock());
+        assertEquals(0, findItem3.getStock());
     }
 
     @DisplayName(value = "초과 주문하면 실패")
@@ -141,7 +149,7 @@ class RedissonLockFacadeTest {
                         .build();
                 try {
 
-                    redissonLockFacade.placeOrder(orderRequest);
+                    redissonOrderService.placeOrder(orderRequest);
 
                 } catch (Exception e) {
                     log.error("Exception occurred: {}", e.getMessage());
