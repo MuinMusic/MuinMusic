@@ -1,8 +1,7 @@
 package com.mucompany.muinmusic.order.app;
 
-import com.mucompany.muinmusic.Item.domain.Item;
-import com.mucompany.muinmusic.Item.repository.ItemRepository;
-import com.mucompany.muinmusic.exception.ItemNotFoundException;
+import com.mucompany.muinmusic.item.domain.Item;
+import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
@@ -11,7 +10,10 @@ import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,12 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -46,7 +44,7 @@ public class OrderServiceTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    private void h2DBResetAutoIncrement() {
+    private void h2ResetAutoIncrement() {
         jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE orders ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
@@ -55,13 +53,17 @@ public class OrderServiceTest {
 
     @BeforeEach
     void setup() {
-        h2DBResetAutoIncrement();
+        h2ResetAutoIncrement();
 
         Member member = new Member("dp", "seoul");
-        Item item = new Item("jpaBook", 20000, 100);
-
         memberRepository.save(member);
+
+        Item item = new Item("jpaBook1", 20000, 100);
+        Item item2 = new Item("jpaBook2", 20000, 100);
+        Item item3 = new Item("jpaBook3", 20000, 100);
         itemRepository.save(item);
+        itemRepository.save(item2);
+        itemRepository.save(item3);
 
         OrderItem orderItem = new OrderItem(item.getId(), 1, 60000);
         orderItemRepository.save(orderItem);
@@ -86,47 +88,6 @@ public class OrderServiceTest {
         orderService.cancel(order.getId(), order.getMember().getId());
 
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
-    }
-
-    @Disabled
-    @DisplayName(value = "placeOrder() -> pessimisticLock 적용, 동시성 성공")
-    @Test
-    public void t3() throws InterruptedException {
-        int threadCount = 100;
-
-        ExecutorService executorService = Executors.newFixedThreadPool(32);
-        CountDownLatch latch = new CountDownLatch(threadCount);
-
-        for (int i = 0; i < threadCount; i++) {
-            executorService.submit(() -> {
-                OrderItem orderItem = new OrderItem(1L, 1, 60000);
-                orderItemRepository.save(orderItem);
-
-                List<Long> orderItemIdList = new ArrayList<>();
-                orderItemIdList.add(orderItem.getId());
-
-                OrderRequest orderRequest = OrderRequest.builder()
-                        .memberId(1L)
-                        .orderItemIdList(orderItemIdList)
-                        .address("seoul")
-                        .orderDate(LocalDateTime.now())
-                        .build();
-                try {
-                    orderService.placeOrder(orderRequest);
-
-                } catch (Exception e) {
-                    log.error(e.getMessage());
-                }
-
-                latch.countDown();
-            });
-        }
-
-        latch.await();
-
-        Item findItem = itemRepository.findById(1L).orElseThrow(() -> new ItemNotFoundException());
-
-        assertEquals(0, findItem.getStock());
     }
 
     private void orderSave() {

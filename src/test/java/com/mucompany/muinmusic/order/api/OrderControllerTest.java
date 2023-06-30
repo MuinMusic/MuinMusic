@@ -1,21 +1,28 @@
 package com.mucompany.muinmusic.order.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mucompany.muinmusic.Item.domain.Item;
-import com.mucompany.muinmusic.Item.repository.ItemRepository;
-import com.mucompany.muinmusic.exception.*;
-import com.mucompany.muinmusic.facade.RedissonLockFacade;
+import com.mucompany.muinmusic.item.domain.Item;
+import com.mucompany.muinmusic.item.repository.ItemRepository;
+import com.mucompany.muinmusic.exception.InsufficientStockException;
+import com.mucompany.muinmusic.exception.ItemNotFoundException;
+import com.mucompany.muinmusic.exception.MemberNotFoundException;
+import com.mucompany.muinmusic.exception.NotMatchTheOrdererException;
+import com.mucompany.muinmusic.exception.OrderCancellationException;
+import com.mucompany.muinmusic.exception.OrderItemNotFoundException;
+import com.mucompany.muinmusic.exception.OrderNotFoundException;
+import com.mucompany.muinmusic.facade.RedissonOrderService;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.app.OrderRequest;
 import com.mucompany.muinmusic.order.app.OrderResponse;
-import com.mucompany.muinmusic.order.app.OrderService;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,16 +58,14 @@ public class OrderControllerTest {
     @Autowired
     private ItemRepository itemRepository;
     @Autowired
-    private OrderService orderService;
-    @Autowired
     private OrderRepository orderRepository;
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
-    private RedissonLockFacade redissonLockFacade;
+    private RedissonOrderService redissonOrderService;
 
 
-    private void h2DBResetAutoIncrement() {
+    private void h2ResetAutoIncrement() {
         jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE orders ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
@@ -69,7 +74,7 @@ public class OrderControllerTest {
 
     @BeforeEach
     void setup() {
-        h2DBResetAutoIncrement();
+        h2ResetAutoIncrement();
 
         Member member = new Member("dp", "seoul");
         Item item = new Item("jpaBook", 20000, 10);
@@ -166,7 +171,7 @@ public class OrderControllerTest {
             Item findItem = itemRepository.findById(itemId).orElseThrow();
             item.add(findItem);
         }
-        itemRepository.delete(item.get(1));
+        itemRepository.delete(item.get(0));
 
         String requestBody = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(orderRequestDto);
 
@@ -181,7 +186,7 @@ public class OrderControllerTest {
     }
 
     @Transactional
-    @DisplayName(value = "주문하려는 Item의 재고수량 초과했을경우 OutOfStockException 발생 및 HTTP404 응답")
+    @DisplayName(value = "주문하려는 Item의 재고수량 초과했을경우 InsufficientStockException 발생 및 HTTP409 응답")
     @Test
     void t5() throws Exception {
         //아이템의 수량은 5개로 셋팅해놨다
@@ -203,7 +208,7 @@ public class OrderControllerTest {
         String requestBody = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(orderRequestDto);
 
         mockMvc.perform(post("/api/orders").contentType(MediaType.APPLICATION_JSON).content(requestBody))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isConflict())
                 .andExpect(result -> {
                     Throwable exception = result.getResolvedException();
                     assertNotNull(exception);
@@ -308,13 +313,13 @@ public class OrderControllerTest {
                 .orderDate(LocalDateTime.now())
                 .build();
 
-        OrderResponse orderResponse = redissonLockFacade.placeOrder(orderRequest);
+        OrderResponse orderResponse = redissonOrderService.placeOrder(orderRequest);
 
         return orderResponse;
     }
 
     private OrderRequestDto createOrderRequestDto() {
-        List<Long> orderItemIdList = List.of(1L, 2L);
+        List<Long> orderItemIdList = List.of(1L);
         Member member = memberRepository.findById(1L).orElseThrow(MemberNotFoundException::new);
 
         return OrderRequestDto.builder()

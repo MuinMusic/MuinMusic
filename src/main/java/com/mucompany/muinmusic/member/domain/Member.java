@@ -7,7 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
 import org.springframework.util.Assert;
 
 @Entity
@@ -15,7 +14,8 @@ import org.springframework.util.Assert;
 @Getter
 public class Member {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -25,8 +25,8 @@ public class Member {
     private String address;
 
     public Member(String name, String address) {
-        Assert.notNull(name,"name can not be null");
-        Assert.notNull(address,"address can not be null");
+        Assert.notNull(name, "name can not be null");
+        Assert.notNull(address, "address can not be null");
 
         this.name = name;
         this.address = address;

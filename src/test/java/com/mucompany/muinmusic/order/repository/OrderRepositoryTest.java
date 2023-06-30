@@ -1,7 +1,7 @@
 package com.mucompany.muinmusic.order.repository;
 
-import com.mucompany.muinmusic.Item.domain.Item;
-import com.mucompany.muinmusic.Item.repository.ItemRepository;
+import com.mucompany.muinmusic.item.domain.Item;
+import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.OrderItem;
@@ -14,7 +14,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
