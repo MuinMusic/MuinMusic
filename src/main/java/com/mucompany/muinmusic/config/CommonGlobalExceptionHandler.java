@@ -11,10 +11,10 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @Slf4j
 @RestControllerAdvice
 public class CommonGlobalExceptionHandler {
-    @ExceptionHandler({IllegalArgumentException.class, MethodArgumentTypeMismatchException.class, ConstraintViolationException.class})
-    @ResponseStatus(code = HttpStatus.BAD_REQUEST)
-    public void handle(Exception e) {
-        // TODO logging, 응답 정의
-    }
+//    @ExceptionHandler({IllegalArgumentException.class, MethodArgumentTypeMismatchException.class, ConstraintViolationException.class})
+//    @ResponseStatus(code = HttpStatus.BAD_REQUEST)
+//    public void handle(Exception e) {
+//        // TODO logging, 응답 정의
+//    }
 
 }

@@ -10,28 +10,28 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class PromotionGlobalExceptionHandler {
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public void handle(PromotionNotFoundException e) {
-        // TODO logging, 응답 정의
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public void handle(PromotionNotActiveException e) {
-        // TODO logging, 응답 정의
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public void handle(MemberNotFoundException e) {
-        // TODO logging, 응답 정의
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public void handle(AlreadyEnteredPromotionException e) {
-        // TODO logging, 응답 정의
-    }
+//    @ExceptionHandler
+//    @ResponseStatus(HttpStatus.NOT_FOUND)
+//    public void handle(PromotionNotFoundException e) {
+//        // TODO logging, 응답 정의
+//    }
+//
+//    @ExceptionHandler
+//    @ResponseStatus(HttpStatus.NOT_FOUND)
+//    public void handle(PromotionNotActiveException e) {
+//        // TODO logging, 응답 정의
+//    }
+//
+//    @ExceptionHandler
+//    @ResponseStatus(HttpStatus.NOT_FOUND)
+//    public void handle(MemberNotFoundException e) {
+//        // TODO logging, 응답 정의
+//    }
+//
+//    @ExceptionHandler
+//    @ResponseStatus(HttpStatus.CONFLICT)
+//    public void handle(AlreadyEnteredPromotionException e) {
+//        // TODO logging, 응답 정의
+//    }
 
 }

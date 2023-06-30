@@ -1,7 +1,12 @@
 package com.mucompany.muinmusic.promotion.entry.domain;
 
 import com.mucompany.muinmusic.promotion.core.PromotionPeriod;
-import jakarta.persistence.*;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 

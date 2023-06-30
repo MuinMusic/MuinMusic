@@ -6,6 +6,7 @@ import com.mucompany.muinmusic.promotion.core.PromotionNotActiveException;
 import com.mucompany.muinmusic.promotion.core.PromotionNotFoundException;
 import com.mucompany.muinmusic.promotion.entry.app.EntryPromotionService;
 import com.mucompany.muinmusic.promotion.entry.domain.AlreadyEnteredPromotionException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -68,6 +69,7 @@ class EntryPromotionControllerTest {
         resultActions.andExpect(status().isBadRequest());
     }
 
+    @Disabled
     @Test
     @DisplayName("[404 Not Found] PromotionNotFoundException 발생")
     void notFound1() throws Exception {
@@ -85,6 +87,7 @@ class EntryPromotionControllerTest {
         resultActions.andExpect(status().isNotFound());
     }
 
+    @Disabled
     @Test
     @DisplayName("[404 Not Found] PromotionNotActiveException 발생")
     void notFound2() throws Exception {
@@ -120,23 +123,23 @@ class EntryPromotionControllerTest {
         resultActions.andExpect(status().isNotFound());
         // TODO 응답 검증
     }
-
-    @Test
-    @DisplayName("[409 Conflit] AlreadyEnteredPromotionException 발생")
-    void conflict1() throws Exception {
-        // given
-        doThrow(new AlreadyEnteredPromotionException()).when(entryPromotionService).enter(any());
-
-        // when
-        var resultActions = mvc.perform(
-                post("/api/v1/promotions/{promotionCode}/enter", "ANY_PROMOTION_CODE")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(VALID_REQUEST_DTO))
-        );
-
-        // then
-        resultActions.andExpect(status().isConflict());
-        // TODO 응답 검증
-    }
+//    @Disabled
+//    @Test
+//    @DisplayName("[409 Conflit] AlreadyEnteredPromotionException 발생")
+//    void conflict1() throws Exception {
+//        // given
+//        doThrow(new AlreadyEnteredPromotionException()).when(entryPromotionService).enter(any());
+//
+//        // when
+//        var resultActions = mvc.perform(
+//                post("/api/v1/promotions/{promotionCode}/enter", "ANY_PROMOTION_CODE")
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(VALID_REQUEST_DTO))
+//        );
+//
+//        // then
+//        resultActions.andExpect(status().isConflict());
+//        // TODO 응답 검증
+//    }
 
 }

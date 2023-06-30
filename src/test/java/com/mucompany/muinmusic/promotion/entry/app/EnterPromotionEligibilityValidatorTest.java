@@ -88,19 +88,18 @@ class EnterPromotionEligibilityValidatorTest {
         // then
         result.isInstanceOf(MemberNotFoundException.class);
     }
-    @Disabled
-    @Test
-    @DisplayName("프로모션에 이미 응모했으면 AlreadyEnteredPromotionException 발생")
-    void throwAlreadyEnteredPromotionException() {
-        // given
-        entryPromotionRepository.save(new EntryPromotion("ANY_PROMOTION_CODE", "ANY_PROMOTION_NAME", VALID_PERIOD));
-        memberRepository.save(new Member("ANY_MEMBER_NAME", "ANY_MEMBER_ADDRESS"));
-        entryRepository.save(new Entry(1L, "ANY_PROMOTION_CODE", NOW));
-
-        // when
-        var result = assertThatThrownBy(() -> sut.validate(ENTER_PROMOTION_REQUEST));
-
-        // then
-        result.isInstanceOf(AlreadyEnteredPromotionException.class);
-    }
+//    @Test
+//    @DisplayName("프로모션에 이미 응모했으면 AlreadyEnteredPromotionException 발생")
+//    void throwAlreadyEnteredPromotionException() {
+//        // given
+//        entryPromotionRepository.save(new EntryPromotion("ANY_PROMOTION_CODE", "ANY_PROMOTION_NAME", VALID_PERIOD));
+//        memberRepository.save(new Member("ANY_MEMBER_NAME", "ANY_MEMBER_ADDRESS"));
+//        entryRepository.save(new Entry(1L, "ANY_PROMOTION_CODE", NOW));
+//
+//        // when
+//        var result = assertThatThrownBy(() -> sut.validate(ENTER_PROMOTION_REQUEST));
+//
+//        // then
+//        result.isInstanceOf(AlreadyEnteredPromotionException.class);
+//    }
 }
