@@ -1,6 +1,7 @@
 package com.mucompany.muinmusic.order.api;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,7 +9,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
-@JsonRootName(value = "order")
+@JsonTypeName(value = "order")
+@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT, use = JsonTypeInfo.Id.NAME)
 public class OrderRequestDto {
 
     private Long memberId;

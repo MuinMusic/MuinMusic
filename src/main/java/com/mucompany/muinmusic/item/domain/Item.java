@@ -1,7 +1,11 @@
-package com.mucompany.muinmusic.Item.domain;
+package com.mucompany.muinmusic.item.domain;
 
 import com.mucompany.muinmusic.exception.InsufficientStockException;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -35,5 +39,9 @@ public class Item {
             throw new InsufficientStockException();
         }
         this.stock = this.stock - count;
+    }
+
+    public void increase(int count) {
+        this.stock += count;
     }
 }
