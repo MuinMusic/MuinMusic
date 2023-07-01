@@ -1,14 +1,15 @@
 package com.mucompany.muinmusic.order.api;
 
+import com.mucompany.muinmusic.exception.InsufficientStockException;
 import com.mucompany.muinmusic.exception.ItemNameNotMatchException;
 import com.mucompany.muinmusic.exception.ItemNotFoundException;
 import com.mucompany.muinmusic.exception.ItemPriceNotMatchException;
 import com.mucompany.muinmusic.exception.MemberNotFoundException;
 import com.mucompany.muinmusic.exception.NotMatchTheOrdererException;
 import com.mucompany.muinmusic.exception.OrderCancellationException;
+import com.mucompany.muinmusic.exception.OrderFailException;
 import com.mucompany.muinmusic.exception.OrderItemNotFoundException;
 import com.mucompany.muinmusic.exception.OrderNotFoundException;
-import com.mucompany.muinmusic.exception.OutOfStockException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,9 +32,9 @@ public class GlobalExcceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
-    @ExceptionHandler(OutOfStockException.class)
-    public ResponseEntity<String> outOfStockException(OutOfStockException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<String> outOfStockException(InsufficientStockException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 
     @ExceptionHandler(ItemNameNotMatchException.class)
@@ -58,6 +59,11 @@ public class GlobalExcceptionHandler {
 
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<String> orderNotFoundException(OrderNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(OrderFailException.class)
+    public ResponseEntity<String> orderFailException(OrderFailException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 }

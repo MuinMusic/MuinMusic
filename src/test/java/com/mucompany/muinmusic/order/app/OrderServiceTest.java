@@ -1,8 +1,7 @@
 package com.mucompany.muinmusic.order.app;
 
-import com.mucompany.muinmusic.Item.domain.Item;
-import com.mucompany.muinmusic.Item.repository.ItemRepository;
-import com.mucompany.muinmusic.exception.MemberNotFoundException;
+import com.mucompany.muinmusic.item.domain.Item;
+import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
@@ -10,6 +9,8 @@ import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,8 +27,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@Transactional
 @ActiveProfiles("test")
+@Slf4j
 public class OrderServiceTest {
 
     @Autowired
@@ -43,8 +44,7 @@ public class OrderServiceTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-
-    private void h2DBResetAutoIncrement() {
+    private void h2ResetAutoIncrement() {
         jdbcTemplate.execute("ALTER TABLE member ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE orders ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
@@ -53,67 +53,59 @@ public class OrderServiceTest {
 
     @BeforeEach
     void setup() {
-        h2DBResetAutoIncrement();
+        h2ResetAutoIncrement();
 
         Member member = new Member("dp", "seoul");
-        Item item = new Item("jpaBook", 20000, 10);
-        Item item2 = new Item("springBook", 20000, 10);
-        OrderItem orderItem = new OrderItem(item, 3, 60000);
-        OrderItem orderItem2 = new OrderItem(item2, 1, 20000);
-
         memberRepository.save(member);
+
+        Item item = new Item("jpaBook1", 20000, 100);
+        Item item2 = new Item("jpaBook2", 20000, 100);
+        Item item3 = new Item("jpaBook3", 20000, 100);
         itemRepository.save(item);
         itemRepository.save(item2);
+        itemRepository.save(item3);
+
+        OrderItem orderItem = new OrderItem(item.getId(), 1, 60000);
         orderItemRepository.save(orderItem);
-        orderItemRepository.save(orderItem2);
     }
 
-    @DisplayName(value = "OrderRequest 값 유효하면 주문 저장 성공 및 OrderResponse 반환 성공")
-    @Test
-    void t1() {
-        //이메일로 멤버 찾기 unique
-        List<Long> orderItemIdList = new ArrayList<>();
-
-        orderItemIdList.add(1L);
-
-        OrderRequest orderRequest = OrderRequest.builder()
-                .memberId(1L)
-                .orderItemIdList(orderItemIdList)
-                .address("seoul")
-                .orderDate(LocalDateTime.now())
-                .build();
-
-        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
-
-        Order order = orderRepository.findById(orderResponse.getMemberId()).orElseThrow(MemberNotFoundException::new);
-
-        assertThat(order.getOrderStatus()).isEqualTo(orderResponse.getOrderStatus());
-        assertThat(order.getMember().getAddress()).isEqualTo(orderResponse.getAddress());
-        assertThat(order.getOrderItems().size()).isEqualTo(orderResponse.getOrderItemIdList().size());
+    @AfterEach
+    void deleteAll() {
+        orderRepository.deleteAll();
+        orderItemRepository.deleteAll();
+        itemRepository.deleteAll();
+        memberRepository.deleteAll();
     }
 
+    @Transactional
     @DisplayName(value = "orderId, memberId 값 유효하면 취소 성공 ")
     @Test
     void t2() {
-        OrderItem orderItem = orderItemRepository.findAll().get(0);
-        List<Long> orderItemIdList = new ArrayList<>();
-        orderItemIdList.add(orderItem.getId());
+        orderSave();
 
-        OrderRequest orderRequest = OrderRequest.builder()
-                .memberId(1L)
-                .orderItemIdList(orderItemIdList)
-                .address("seoul")
-                .orderDate(LocalDateTime.now())
-                .build();
+        Order order = orderRepository.findById(1L).orElseThrow();
 
-        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
-        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
-
-        Order order = orderRepository.findByOrderItemsId(orderItemId);
-        Long memberId = orderResponse.getMemberId();
-
-        orderService.cancel(order.getId(), memberId);
+        orderService.cancel(order.getId(), order.getMember().getId());
 
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    private void orderSave() {
+
+        Member member = memberRepository.findById(1L).orElseThrow();
+
+        OrderItem orderItem = orderItemRepository.findById(1L).orElseThrow();
+        List<OrderItem> orderItemList = new ArrayList<>();
+        orderItemList.add(orderItem);
+
+        Order order = Order.builder()
+                .member(member)
+                .orderItems(orderItemList)
+                .address("seoul")
+                .orderDate(LocalDateTime.now())
+                .orderStatus(OrderStatus.ORDERED)
+                .build();
+
+        orderRepository.save(order);
     }
 }

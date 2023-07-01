@@ -1,5 +1,6 @@
-package com.mucompany.muinmusic.Item.domain;
+package com.mucompany.muinmusic.item.domain;
 
+import com.mucompany.muinmusic.exception.InsufficientStockException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,7 +14,8 @@ import lombok.NoArgsConstructor;
 @Getter
 public class Item {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -32,7 +34,14 @@ public class Item {
         this.stock = stock;
     }
 
-    public void decreaseStock(int count) {
-        this.stock -= count;
+    public void decrease(int count) {
+        if (this.stock < count) {
+            throw new InsufficientStockException();
+        }
+        this.stock = this.stock - count;
+    }
+
+    public void increase(int count) {
+        this.stock += count;
     }
 }

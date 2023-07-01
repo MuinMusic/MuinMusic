@@ -1,6 +1,6 @@
-package com.mucompany.muinmusic.Item.repository;
+package com.mucompany.muinmusic.item.repository;
 
-import com.mucompany.muinmusic.Item.domain.Item;
+import com.mucompany.muinmusic.item.domain.Item;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
