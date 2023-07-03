@@ -24,14 +24,11 @@ public class OrderResponse {
     private LocalDateTime orderDate;
 
     @Builder
-    public OrderResponse(OrderRequest orderRequest, List<Long> orderItemIdList, OrderStatus orderStatus) {
-        this.memberId = orderRequest.getMemberId();
+    public OrderResponse(Long memberId, List<Long> orderItemIdList, String address, OrderStatus orderStatus, LocalDateTime orderDate) {
+        this.memberId = memberId;
         this.orderItemIdList = orderItemIdList;
-        this.address = orderRequest.getAddress();
+        this.address = address;
         this.orderStatus = orderStatus;
-        this.orderDate = orderRequest.getOrderDate();
-
+        this.orderDate = orderDate;
     }
-
-
 }

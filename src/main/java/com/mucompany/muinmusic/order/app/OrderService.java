@@ -52,29 +52,33 @@ public class OrderService {
             itemService.stockDecrease(cartItem);
         }
         //주문이 들어간다
-        return save(cartItems, member, orderRequest);
+        return save(cartItems, member);
     }
 
-    private OrderResponse save(List<CartItem> cartItemList, Member member, OrderRequest orderRequest) {
-        List<OrderItem> orderItemList = cartItemList.stream().map(OrderItem::new).collect(Collectors.toList());
+    private OrderResponse save(List<CartItem> cartItemList, Member member) {
+        List<OrderItem> orderItemList = cartItemList.stream()
+                .map(OrderItem::new)
+                .collect(Collectors.toList());
 
         Order order = createOrder(member, orderItemList);
 
         orderRepository.save(order);
 
-
-        List<OrderItem> orderItems = order.getOrderItems();
-        List<Long> orderItemIdList = new ArrayList<>();
-        for (OrderItem orderItem : orderItems) {
-            orderItemIdList.add(orderItem.getId());
-        }
-
-        //결제
         if (paymentService.completePayment()) {
             order.payed();
         }
 
-        return new OrderResponse(orderRequest, orderItemIdList, order.getOrderStatus());
+        List<Long> orderItemIdList = orderItemList.stream()
+                .map(OrderItem::getId)
+                .collect(Collectors.toList());
+
+        return OrderResponse.builder()
+                .memberId(order.getMember().getId())
+                .address(order.getAddress())
+                .orderStatus(order.getOrderStatus())
+                .orderItemIdList(orderItemIdList)
+                .orderDate(order.getOrderDate())
+                .build();
     }
 
     @Transactional
