@@ -23,14 +23,13 @@ import java.time.LocalDateTime;
 public class OrderController {
 
     private final OrderService orderService;
-    private final RedissonOrderService redissonOrderService;
 
     @PostMapping(value = "/orders")
     public ResponseEntity<OrderResponseDto> placeOrder(@RequestBody @Valid OrderRequestDto orderRequestDto) {
 
         OrderRequest orderRequest = createOrderRequest(orderRequestDto);
 
-        OrderResponse orderResponse = redissonOrderService.placeOrder(orderRequest);
+        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
 
         OrderResponseDto orderResponseDto = new OrderResponseDto(orderResponse);
 
