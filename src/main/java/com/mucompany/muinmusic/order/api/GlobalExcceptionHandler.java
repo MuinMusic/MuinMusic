@@ -53,11 +53,6 @@ public class GlobalExcceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
-    @ExceptionHandler(OrderFailException.class)
-    public ResponseEntity<String> orderFailException(OrderFailException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
-
     @ExceptionHandler(CartNotFoundException.class)
     public ResponseEntity<String> cartNotFoundException(CartNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());

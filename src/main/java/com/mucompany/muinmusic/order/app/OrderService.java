@@ -59,11 +59,8 @@ public class OrderService {
         List<OrderItem> orderItemList = cartItemList.stream().map(OrderItem::new).collect(Collectors.toList());
 
         Order order = createOrder(member, orderItemList);
-        try {
-            orderRepository.save(order);
-        } catch (Exception e) {
-            throw new OrderFailException();
-        }
+
+        orderRepository.save(order);
 
         OrderStatus orderStatus = order.getOrderStatus();
 
