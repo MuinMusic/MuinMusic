@@ -62,7 +62,6 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        OrderStatus orderStatus = order.getOrderStatus();
 
         List<OrderItem> orderItems = order.getOrderItems();
         List<Long> orderItemIdList = new ArrayList<>();
@@ -72,9 +71,10 @@ public class OrderService {
 
         //결제
         if (paymentService.completePayment()) {
-            orderStatus = order.payed();
+            order.payed();
         }
-        return new OrderResponse(orderRequest, orderItemIdList, orderStatus);
+
+        return new OrderResponse(orderRequest, orderItemIdList, order.getOrderStatus());
     }
 
     @Transactional
