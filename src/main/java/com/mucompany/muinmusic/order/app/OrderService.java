@@ -41,7 +41,6 @@ public class OrderService {
 
     @Transactional
     public OrderResponse placeOrder(OrderRequest orderRequest) {
-        OrderResponse orderResponse;
         Long cartId = orderRequest.getCartId();
         List<CartItem> cartItemList = new ArrayList<>();
 
@@ -59,10 +58,7 @@ public class OrderService {
             cartItemList.add(cartItem);
         }
         //주문이 들어간다
-        orderResponse = save(cartItemList, member, orderRequest);
-
-
-        return orderResponse;
+        return save(cartItemList, member, orderRequest);
     }
 
     private OrderResponse save(List<CartItem> cartItemList, Member member, OrderRequest orderRequest) {
@@ -87,7 +83,6 @@ public class OrderService {
         for (OrderItem orderItem : orderItems) {
             orderItemIdList.add(orderItem.getId());
         }
-
 
         //결제
         if (paymentService.completePayment()) {
