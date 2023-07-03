@@ -24,6 +24,21 @@ CREATE TABLE IF NOT EXISTS `order_item` (
     `item_id` BIGINT NOT NULL,
     PRIMARY KEY (`id`));
 
+DROP TABLE IF EXISTS `cart_item`;
+CREATE TABLE IF NOT EXISTS `cart_item` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `count` INT NOT NULL,
+    `total_amount` INT NOT NULL,
+    `item_id` BIGINT NOT NULL,
+    PRIMARY KEY (`id`));
+
+DROP TABLE IF EXISTS `cart`;
+CREATE TABLE IF NOT EXISTS `cart` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `member_id` BIGINT NOT NULL,
+    PRIMARY KEY (`id`));
+
+
 DROP TABLE IF EXISTS `orders`;
 CREATE TABLE IF NOT EXISTS `orders` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
@@ -37,6 +52,11 @@ DROP TABLE IF EXISTS `orders_order_items`;
 CREATE TABLE IF NOT EXISTS `orders_order_items` (
     `order_items_id` BIGINT NOT NULL,
     `order_id` BIGINT NOT NULL );
+
+DROP TABLE IF EXISTS `cart_cart_items`;
+CREATE TABLE IF NOT EXISTS `orders_order_items` (
+    `cart_items_id` BIGINT NOT NULL,
+    `cart_id` BIGINT NOT NULL );
 
 -- EnterPromotion --
 CREATE TABLE IF NOT EXISTS entry_promotion (

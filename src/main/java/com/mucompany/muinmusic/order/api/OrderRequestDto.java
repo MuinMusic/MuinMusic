@@ -15,16 +15,16 @@ public class OrderRequestDto {
 
     private Long memberId;
 
-    private List<Long> orderItemIdList;
+    private Long cartId;
 
     private String address;
 
     private LocalDateTime orderDate;
 
     @Builder
-    public OrderRequestDto(Long memberId, List<Long> orderItemIdList, String address, LocalDateTime orderDate) {
+    public OrderRequestDto(Long memberId, Long cartId, String address, LocalDateTime orderDate) {
         this.memberId = memberId;
-        this.orderItemIdList = orderItemIdList;
+        this.cartId = cartId;
         this.address = address;
         this.orderDate = orderDate;
     }

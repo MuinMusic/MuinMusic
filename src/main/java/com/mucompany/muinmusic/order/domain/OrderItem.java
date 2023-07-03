@@ -1,5 +1,6 @@
 package com.mucompany.muinmusic.order.domain;
 
+import com.mucompany.muinmusic.cart.domain.CartItem;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,13 +29,14 @@ public class OrderItem {
     @Column(nullable = false)
     private int totalAmount;
 
-    public OrderItem(Long itemId, int count, int totalAmount) {
-        Assert.notNull(itemId, "itemId can not be null");
-        Assert.notNull(count, "count can not be null");
-        Assert.notNull(totalAmount, "totalAmount can not be null");
+    public OrderItem(CartItem cartItem) {
+        Assert.notNull(cartItem, "cartItem can not be null");
 
-        this.itemId = itemId;
-        this.count = count;
-        this.totalAmount = totalAmount;
+        this.itemId = cartItem.getItemId();
+        this.count = cartItem.getCount();
+        this.totalAmount = cartItem.getTotalAmount();
     }
+
+
+
 }

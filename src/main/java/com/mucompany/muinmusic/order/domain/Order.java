@@ -1,5 +1,6 @@
 package com.mucompany.muinmusic.order.domain;
 
+import com.mucompany.muinmusic.cart.domain.CartItem;
 import com.mucompany.muinmusic.exception.OrderCancellationException;
 import com.mucompany.muinmusic.member.domain.Member;
 import jakarta.persistence.Column;

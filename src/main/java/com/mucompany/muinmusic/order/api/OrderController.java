@@ -26,7 +26,7 @@ public class OrderController {
     private final RedissonOrderService redissonOrderService;
 
     @PostMapping(value = "/orders")
-    public ResponseEntity<OrderResponseDto> create(@RequestBody @Valid OrderRequestDto orderRequestDto) {
+    public ResponseEntity<OrderResponseDto> placeOrder(@RequestBody @Valid OrderRequestDto orderRequestDto) {
 
         OrderRequest orderRequest = createOrderRequest(orderRequestDto);
 
@@ -47,7 +47,7 @@ public class OrderController {
     private static OrderRequest createOrderRequest(OrderRequestDto orderRequestDto) {
         return OrderRequest.builder()
                 .memberId(orderRequestDto.getMemberId())
-                .orderItemIdList(orderRequestDto.getOrderItemIdList())
+                .cartId(orderRequestDto.getCartId())
                 .address(orderRequestDto.getAddress())
                 .orderDate(LocalDateTime.now())
                 .build();
