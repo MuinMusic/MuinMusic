@@ -18,6 +18,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.util.Assert;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -60,8 +61,8 @@ public class Order {
         this.orderDate = orderDate;
     }
 
-    public OrderStatus payed() {
-        return this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
+    public void payed() {
+        this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
     }
 
     public void shipping() {
