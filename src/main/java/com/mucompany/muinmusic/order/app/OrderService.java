@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Primary
 @Service
@@ -55,12 +56,7 @@ public class OrderService {
     }
 
     private OrderResponse save(List<CartItem> cartItemList, Member member, OrderRequest orderRequest) {
-        List<OrderItem> orderItemList = new ArrayList<>();
-        for (CartItem cartItem : cartItemList) {
-            OrderItem orderItem = new OrderItem(cartItem);
-            orderItemRepository.save(orderItem);
-            orderItemList.add(orderItem);
-        }
+        List<OrderItem> orderItemList = cartItemList.stream().map(OrderItem::new).collect(Collectors.toList());
 
         Order order = createOrder(member, orderItemList);
         try {
