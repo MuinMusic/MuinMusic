@@ -17,10 +17,10 @@ public class ItemService {
     private final ItemRepository itemRepository;
 
     @Transactional
-    public void itemStockDecrease(CartItem cartItem, Long itemId) {
+    public void stockDecrease(CartItem cartItem) {
+        Long itemId = cartItem.getItemId();
         Item item = itemRepository.findById(itemId).orElseThrow(ItemNotFoundException::new);
         item.decrease(cartItem.getCount());
         log.info("item.getStock() = " + item.getStock());
-        itemRepository.save(item);
     }
 }

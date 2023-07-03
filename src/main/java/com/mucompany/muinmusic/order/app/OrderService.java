@@ -5,8 +5,6 @@ import com.mucompany.muinmusic.cart.domain.CartItem;
 import com.mucompany.muinmusic.cart.domain.repository.CartRepository;
 import com.mucompany.muinmusic.exception.*;
 import com.mucompany.muinmusic.item.app.ItemService;
-import com.mucompany.muinmusic.item.domain.Item;
-import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
@@ -33,7 +31,6 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final MemberRepository memberRepository;
-    private final ItemRepository itemRepository;
     private final PaymentService paymentService;
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
@@ -49,12 +46,13 @@ public class OrderService {
         List<CartItem> cartItems = cart.getCartItems();
 
         List<CartItem> cartItemList = new ArrayList<>();
+
         for (CartItem cartItem : cartItems) {
             //재고차감
-            Long itemId = cartItem.getItemId();
-            itemService.itemStockDecrease(cartItem, itemId);
+            itemService.stockDecrease(cartItem);
             cartItemList.add(cartItem);
         }
+
         //주문이 들어간다
         return save(cartItemList, member, orderRequest);
     }

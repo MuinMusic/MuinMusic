@@ -56,7 +56,7 @@ public class RedissonOrderService {
             for (CartItem cartItem : cartItems) {
                 //재고차감
                 Long itemId = cartItem.getItemId();
-                itemService.itemStockDecrease(cartItem, itemId);
+                itemService.stockDecrease(cartItem, itemId);
                 //아이템 서비스를 따로 만들자
                 cartItemList.add(cartItem);
             }
