@@ -41,7 +41,6 @@ public class OrderService {
 
     @Transactional
     public OrderResponse placeOrder(OrderRequest orderRequest) {
-        List<CartItem> cartItemList = new ArrayList<>();
         //회원이 존재하는지 확인
         Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(MemberNotFoundException::new);
 
@@ -49,6 +48,7 @@ public class OrderService {
         Cart cart = cartRepository.findById(orderRequest.getCartId()).orElseThrow(CartNotFoundException::new);
         List<CartItem> cartItems = cart.getCartItems();
 
+        List<CartItem> cartItemList = new ArrayList<>();
         for (CartItem cartItem : cartItems) {
             //재고차감
             Long itemId = cartItem.getItemId();
