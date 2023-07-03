@@ -43,18 +43,15 @@ public class OrderService {
 
         //장바구니에서 가져온
         Cart cart = cartRepository.findById(orderRequest.getCartId()).orElseThrow(CartNotFoundException::new);
-        List<CartItem> cartItems = cart.getCartItems();
 
-        List<CartItem> cartItemList = new ArrayList<>();
+        List<CartItem> cartItems = cart.getCartItems();
 
         for (CartItem cartItem : cartItems) {
             //재고차감
             itemService.stockDecrease(cartItem);
-            cartItemList.add(cartItem);
         }
-
         //주문이 들어간다
-        return save(cartItemList, member, orderRequest);
+        return save(cartItems, member, orderRequest);
     }
 
     private OrderResponse save(List<CartItem> cartItemList, Member member, OrderRequest orderRequest) {

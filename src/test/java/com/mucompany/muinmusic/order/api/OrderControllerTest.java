@@ -8,13 +8,12 @@ import com.mucompany.muinmusic.cart.domain.repository.CartRepository;
 import com.mucompany.muinmusic.exception.*;
 import com.mucompany.muinmusic.item.domain.Item;
 import com.mucompany.muinmusic.item.repository.ItemRepository;
-import com.mucompany.muinmusic.facade.RedissonOrderService;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.app.OrderRequest;
 import com.mucompany.muinmusic.order.app.OrderResponse;
+import com.mucompany.muinmusic.order.app.OrderService;
 import com.mucompany.muinmusic.order.domain.Order;
-import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
@@ -65,7 +64,7 @@ public class OrderControllerTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
-    private RedissonOrderService redissonOrderService;
+    private OrderService orderService;
 
 
     private void h2ResetAutoIncrement() {
@@ -343,7 +342,7 @@ public class OrderControllerTest {
                 .orderDate(LocalDateTime.now())
                 .build();
 
-        OrderResponse orderResponse = redissonOrderService.placeOrder(orderRequest);
+        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
 
         return orderResponse;
     }
