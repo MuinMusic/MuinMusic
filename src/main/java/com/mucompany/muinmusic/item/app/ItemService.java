@@ -17,9 +17,9 @@ public class ItemService {
     private final ItemRepository itemRepository;
 
     @Transactional
-    public void stockDecrease(CartItem cartItem) {
-        Item item = itemRepository.findById(cartItem.getItemId()).orElseThrow(ItemNotFoundException::new);
-        item.decrease(cartItem.getCount());
+    public void stockDecrease(Long itemId, int count) {
+        Item item = itemRepository.findById(itemId).orElseThrow(ItemNotFoundException::new);
+        item.decrease(count);
         log.info("item.getStock() = " + item.getStock());
     }
 }
