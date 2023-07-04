@@ -10,6 +10,7 @@ import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
+import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import com.mucompany.muinmusic.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class OrderService {
     private final PaymentService paymentService;
     private final CartRepository cartRepository;
     private final ItemService itemService;
+    private final OrderItemRepository orderItemRepository;
 
     @Transactional
     public OrderResponse placeOrder(OrderRequest orderRequest) {
@@ -79,6 +81,7 @@ public class OrderService {
 
         List<OrderItem> orderItemList = cartItems.stream()
                 .map(OrderItem::new)
+                .peek(orderItemRepository::save)
                 .collect(Collectors.toList());
 
         return Order.builder()
