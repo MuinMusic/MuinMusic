@@ -64,13 +64,13 @@ public class OrderService {
 
     @Transactional
     public void cancel(Long orderId, Long memberId) {
-        Member loginMember = memberRepository.findById(memberId).orElseThrow(() -> new MemberNotFoundException());
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new OrderNotFoundException());
+        Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
         if (!order.getMember().equals(loginMember)) {
             throw new NotMatchTheOrdererException();
         }
-        //취소 검증
+
         order.cancel();
     }
 
