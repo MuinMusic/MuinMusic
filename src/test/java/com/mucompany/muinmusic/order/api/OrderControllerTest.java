@@ -31,7 +31,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -181,15 +180,11 @@ public class OrderControllerTest {
 //
         Long cartId = orderRequestDto.getCartId();
         Cart cart = cartRepository.findById(cartId).orElseThrow();
-        List<CartItem> cartItems = cart.getCartItems();
-        List<Item> items = new ArrayList<>();
 
-        for (CartItem cartItem : cartItems) {
-            Long itemId1 = cartItem.getItemId();
-            Item findItem = itemRepository.findById(itemId1).orElseThrow();
+        List<Item> items = cart.getCartItems().stream()
+                .map(cartItem -> itemRepository.findById(cartItem.getItemId()).orElseThrow(ItemNotFoundException::new))
+                .toList();
 
-            items.add(findItem);
-        }
         itemRepository.delete(items.get(0));
 
         String requestBody = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(orderRequestDto);

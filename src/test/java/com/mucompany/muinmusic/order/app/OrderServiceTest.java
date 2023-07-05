@@ -27,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -115,7 +114,7 @@ public class OrderServiceTest {
         List<OrderItem> orderItems = cart.getCartItems().stream()
                 .map(OrderItem::new)
                 .peek(orderItemRepository::save)
-                .collect(Collectors.toList());
+                .toList();
 
         Order order = Order.builder()
                 .member(member)

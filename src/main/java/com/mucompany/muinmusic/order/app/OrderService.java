@@ -3,7 +3,10 @@ package com.mucompany.muinmusic.order.app;
 import com.mucompany.muinmusic.cart.domain.Cart;
 import com.mucompany.muinmusic.cart.domain.CartItem;
 import com.mucompany.muinmusic.cart.domain.repository.CartRepository;
-import com.mucompany.muinmusic.exception.*;
+import com.mucompany.muinmusic.exception.CartNotFoundException;
+import com.mucompany.muinmusic.exception.MemberNotFoundException;
+import com.mucompany.muinmusic.exception.NotMatchTheOrdererException;
+import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import com.mucompany.muinmusic.item.app.ItemService;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
@@ -21,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Primary
 @Service
@@ -53,7 +55,7 @@ public class OrderService {
 
         List<Long> orderItemIdList = order.getOrderItems().stream()
                 .map(OrderItem::getId)
-                .collect(Collectors.toList());
+                .toList();
 
         return OrderResponse.builder()
                 .memberId(order.getMember().getId())
@@ -82,7 +84,7 @@ public class OrderService {
         List<OrderItem> orderItemList = cartItems.stream()
                 .map(OrderItem::new)
                 .peek(orderItemRepository::save)
-                .collect(Collectors.toList());
+                .toList();
 
         return Order.builder()
                 .member(member)
