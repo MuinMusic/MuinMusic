@@ -18,14 +18,12 @@ import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import com.mucompany.muinmusic.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Primary
 @Service
 @RequiredArgsConstructor
 @Slf4j
