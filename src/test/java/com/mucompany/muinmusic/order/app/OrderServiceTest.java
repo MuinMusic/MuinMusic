@@ -4,6 +4,7 @@ import com.mucompany.muinmusic.cart.domain.Cart;
 import com.mucompany.muinmusic.cart.domain.CartItem;
 import com.mucompany.muinmusic.cart.domain.repository.CartItemRepository;
 import com.mucompany.muinmusic.cart.domain.repository.CartRepository;
+import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import com.mucompany.muinmusic.item.domain.Item;
 import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
@@ -25,8 +26,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -76,17 +77,12 @@ public class OrderServiceTest {
         CartItem cartItem = new CartItem(item.getId(), 1, 60000);
         CartItem cartItem2 = new CartItem(item2.getId(), 1, 60000);
         CartItem cartItem3 = new CartItem(item3.getId(), 1, 60000);
-
         cartItemRepository.save(cartItem);
         cartItemRepository.save(cartItem2);
         cartItemRepository.save(cartItem3);
 
-        List<CartItem> cartItems = new ArrayList<>();
-        cartItems.add(cartItem);
-        cartItems.add(cartItem2);
-        cartItems.add(cartItem3);
-
-        Cart cart = new Cart(member,cartItems);
+        List<CartItem> cartItems = List.of(cartItem, cartItem2, cartItem3);
+        Cart cart = new Cart(member, cartItems);
         cartRepository.save(cart);
     }
 
@@ -105,24 +101,21 @@ public class OrderServiceTest {
     void t1() {
         orderSave();
 
-        Order order = orderRepository.findById(1L).orElseThrow();
+        Order order = orderRepository.findById(1L).orElseThrow(OrderNotFoundException::new);
 
         orderService.cancel(order.getId(), order.getMember().getId());
 
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
-     void orderSave() {
+    void orderSave() {
         Member member = memberRepository.findById(1L).orElseThrow();
         Cart cart = cartRepository.findById(1L).orElseThrow();
-        List<CartItem> cartItems = cart.getCartItems();
 
-        List<OrderItem> orderItems = new ArrayList<>();
-        for (CartItem cartItem : cartItems) {
-            OrderItem orderItem = new OrderItem(cartItem);
-            orderItemRepository.save(orderItem);
-            orderItems.add(orderItem);
-        }
+        List<OrderItem> orderItems = cart.getCartItems().stream()
+                .map(OrderItem::new)
+                .peek(orderItemRepository::save)
+                .collect(Collectors.toList());
 
         Order order = Order.builder()
                 .member(member)
