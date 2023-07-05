@@ -74,6 +74,7 @@ public class OrderService {
         }
 
         order.cancel();
+        paymentService.paymentCancellation();
     }
 
 
