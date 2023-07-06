@@ -1,8 +1,8 @@
 package com.mucompany.muinmusic.order.domain;
 
-import com.mucompany.muinmusic.cart.domain.CartItem;
 import com.mucompany.muinmusic.exception.OrderCancellationException;
 import com.mucompany.muinmusic.member.domain.Member;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,7 +35,7 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.PERSIST)
     private List<OrderItem> orderItems;
 
     @Column(nullable = false)

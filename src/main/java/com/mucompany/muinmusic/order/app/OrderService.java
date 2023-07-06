@@ -82,7 +82,6 @@ public class OrderService {
 
         List<OrderItem> orderItemList = cartItems.stream()
                 .map(OrderItem::new)
-                .peek(orderItemRepository::save)
                 .toList();
 
         return Order.builder()
