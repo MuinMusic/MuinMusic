@@ -21,7 +21,6 @@ import com.mucompany.muinmusic.order.app.OrderResponse;
 import com.mucompany.muinmusic.order.app.OrderService;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
-import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,8 +55,6 @@ public class OrderControllerTest {
     private ObjectMapper objectMapper;
     @Autowired
     private MemberRepository memberRepository;
-    @Autowired
-    private OrderItemRepository orderItemRepository;
     @Autowired
     private CartItemRepository cartItemRepository;
     @Autowired
@@ -102,6 +99,9 @@ public class OrderControllerTest {
         cartItemRepository.save(cartItem2);
         cartItemRepository.save(cartItem3);
 
+        List<CartItem> cartItems = List.of(cartItem, cartItem2, cartItem3);
+        Cart cart = new Cart(member, cartItems);
+        cartRepository.save(cart);
     }
 
     @AfterEach
@@ -209,18 +209,21 @@ public class OrderControllerTest {
     @DisplayName(value = "주문하려는 Item의 재고수량 초과했을경우 InsufficientStockException 발생 및 HTTP409 응답")
     @Test
     void t5() throws Exception {
+        Member member = new Member("Dongpil Son", "seoul");
+        memberRepository.save(member);
+
         //아이템의 수량은 5개로 셋팅해놨다
         Item ticket = new Item("xxx콘서트 티켓", 20000, 5);
         itemRepository.save(ticket);
+
         //6개를 주문한다면
         CartItem cartItem = new CartItem(ticket.getId(), 6, 120000);
         List<CartItem> cartItems = List.of(cartItem);
-        Member member = memberRepository.findById(1L).orElseThrow();
         Cart cart = new Cart(member, cartItems);
         cartRepository.save(cart);
 
         OrderRequestDto orderRequestDto = OrderRequestDto.builder()
-                .memberId(1L)
+                .memberId(member.getId())
                 .cartId(cart.getId())
                 .address("seoul")
                 .orderDate(LocalDateTime.now())
@@ -326,19 +329,9 @@ public class OrderControllerTest {
     }
 
     private OrderResponse orderPlace() {
-        Member member = memberRepository.findById(1L).orElseThrow(MemberNotFoundException::new);
-        CartItem cartItem = cartItemRepository.findById(1L).orElseThrow();
-        CartItem cartItem2 = cartItemRepository.findById(2L).orElseThrow();
-        CartItem cartItem3 = cartItemRepository.findById(3L).orElseThrow();
-
-        List<CartItem> cartItems = List.of(cartItem, cartItem2, cartItem3);
-
-        Cart cart = new Cart(member, cartItems);
-        cartRepository.save(cart);
-
         OrderRequest orderRequest = OrderRequest.builder()
                 .memberId(1L)
-                .cartId(cart.getId())
+                .cartId(1L)
                 .address("seoul")
                 .orderDate(LocalDateTime.now())
                 .build();
@@ -350,18 +343,10 @@ public class OrderControllerTest {
 
     private OrderRequestDto createOrderRequestDto() {
         Member member = memberRepository.findById(1L).orElseThrow(MemberNotFoundException::new);
-        CartItem cartItem = cartItemRepository.findById(1L).orElseThrow();
-        CartItem cartItem2 = cartItemRepository.findById(2L).orElseThrow();
-        CartItem cartItem3 = cartItemRepository.findById(3L).orElseThrow();
-        List<CartItem> cartItems = List.of(cartItem, cartItem2, cartItem3);
-
-        Cart cart = new Cart(member, cartItems);
-        cartRepository.save(cart);
-
 
         return OrderRequestDto.builder()
                 .memberId(1L)
-                .cartId(cart.getId())
+                .cartId(1L)
                 .address(member.getAddress())
                 .orderDate(LocalDateTime.now())
                 .build();
