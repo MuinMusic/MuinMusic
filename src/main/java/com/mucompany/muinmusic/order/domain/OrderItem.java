@@ -36,7 +36,4 @@ public class OrderItem {
         this.count = cartItem.getCount();
         this.totalAmount = cartItem.getTotalAmount();
     }
-
-
-
 }
