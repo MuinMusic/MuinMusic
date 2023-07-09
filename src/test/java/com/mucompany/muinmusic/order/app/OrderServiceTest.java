@@ -57,6 +57,7 @@ public class OrderServiceTest {
         jdbcTemplate.execute("ALTER TABLE orders ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE order_item ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE cart ALTER COLUMN id RESTART WITH 1");
     }
 
     @BeforeEach
@@ -105,6 +106,20 @@ public class OrderServiceTest {
         orderService.cancel(order.getId(), order.getMember().getId());
 
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
+    }
+
+    @Transactional
+    @DisplayName("주문내역 논리삭제 성공 테스트")
+    @Test
+    void t2() {
+        orderSave();
+
+        Order order = orderRepository.findById(1L).orElseThrow();
+        Member member = memberRepository.findById(order.getMember().getId()).orElseThrow();
+
+        orderService.softDelete(order.getId(),member.getId());
+
+        assertThat(order.isDelete()).isEqualTo(true);
     }
 
     void orderSave() {
