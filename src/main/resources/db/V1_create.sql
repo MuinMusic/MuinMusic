@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
     `order_date` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     `address` VARCHAR(50) NOT NULL,
     `order_status` VARCHAR(20) NOT NULL,
+    `delete` BIT NOT NULL,
     PRIMARY KEY (`id`));
 
 DROP TABLE IF EXISTS `orders_order_items`;

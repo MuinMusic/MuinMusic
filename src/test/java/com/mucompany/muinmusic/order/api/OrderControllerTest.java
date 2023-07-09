@@ -12,6 +12,7 @@ import com.mucompany.muinmusic.exception.MemberNotFoundException;
 import com.mucompany.muinmusic.exception.NotMatchTheOrdererException;
 import com.mucompany.muinmusic.exception.OrderCancellationException;
 import com.mucompany.muinmusic.exception.OrderNotFoundException;
+import com.mucompany.muinmusic.exception.UnableToDeleteOrderException;
 import com.mucompany.muinmusic.item.domain.Item;
 import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
@@ -38,8 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -273,7 +274,7 @@ public class OrderControllerTest {
         Long memberId = otherMember.getId();
 
         mockMvc.perform(post("/api/orders/{orderId}/cancel", orderId).param("memberId", memberId.toString()))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isConflict())
                 .andExpect(result -> {
                     Throwable exception = result.getResolvedException();
                     assertNotNull(exception);
@@ -326,6 +327,66 @@ public class OrderControllerTest {
                     assertEquals(OrderCancellationException.class, exception.getClass());
                     assertEquals("배송중인 상품은 취소할 수 없습니다.", exception.getMessage());
                 });
+    }
+
+    @Transactional
+    @DisplayName("orderId,memberId 일치하면 주문삭제 성공")
+    @Test
+    void t10() throws Exception {
+        OrderResponse orderResponse = orderPlace();
+
+        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
+        Order order = orderRepository.findByOrderItemsId(orderItemId);
+
+        Long orderId = order.getId();
+        Long memberId = orderResponse.getMemberId();
+
+        mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
+                .andExpect(status().isNoContent());
+    }
+
+    @Transactional
+    @DisplayName("배송중일경우 주문삭제 실패")
+    @Test
+    void t11() throws Exception {
+        OrderResponse orderResponse = orderPlace();
+
+        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
+        Order order = orderRepository.findByOrderItemsId(orderItemId);
+
+        order.shipping();
+
+        Long orderId = order.getId();
+        Long memberId = orderResponse.getMemberId();
+
+        mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
+                .andExpect(status().isConflict())
+                .andExpect(result -> {
+                    Throwable exception = result.getResolvedException();
+                    assertNotNull(exception);
+                    assertEquals(UnableToDeleteOrderException.class, exception.getClass());
+                    assertEquals("주문내역을 삭제할 수 없습니다", exception.getMessage());
+                });
+
+            mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
+                    .andExpect(status().isConflict());
+    }
+
+    @Transactional
+    @DisplayName("주문자와 로그인회원 다를 경우 주문삭제 실패")
+    @Test
+    void t12() throws Exception {
+        OrderResponse orderResponse = orderPlace();
+
+        Member otherMember = memberRepository.save(new Member("sdp", "seoul"));
+        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
+        Order order = orderRepository.findByOrderItemsId(orderItemId);
+
+        Long orderId = order.getId();
+        Long memberId = otherMember.getId();
+
+        mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
+                .andExpect(status().isConflict());
     }
 
     private OrderResponse orderPlace() {
