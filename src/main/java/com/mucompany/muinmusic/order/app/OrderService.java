@@ -96,6 +96,14 @@ public class OrderService {
         order.softDelete();
     }
 
+    public List<Order> getOrderHistory(Long memberId) {
+        memberRepository.findById(memberId).orElseThrow();
+
+        return orderRepository.findByMemberId(memberId).stream()
+                .filter(order -> !order.isDelete())
+                .toList();
+    }
+
     private Order createOrder(Member member, List<CartItem> cartItems) {
 
         List<OrderItem> orderItemList = cartItems.stream()
