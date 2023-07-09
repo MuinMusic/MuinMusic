@@ -122,6 +122,25 @@ public class OrderServiceTest {
         assertThat(order.isDelete()).isEqualTo(true);
     }
 
+    @Transactional
+    @DisplayName("3개의 주문중 삭제 되지 않은 2개의 주문목록 가져오기")
+    @Test
+    void t3() {
+        //3개의 주문
+        orderSave();
+        orderSave();
+        orderSave();
+
+        //마지막 주문 삭제
+        Order order3 = orderRepository.findById(3L).orElseThrow();
+        order3.softDelete();
+
+        List<Order> orderHistory = orderService.getOrderHistory(1L);
+
+        assertThat(orderHistory.stream().allMatch(order -> !order.isDelete())).isEqualTo(true);
+        assertThat(orderHistory.size()).isEqualTo(2);
+    }
+
     void orderSave() {
         Member member = memberRepository.findById(1L).orElseThrow();
         Cart cart = cartRepository.findById(1L).orElseThrow();
