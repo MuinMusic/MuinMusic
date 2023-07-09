@@ -47,6 +47,8 @@ public class Order {
 
     private LocalDateTime orderDate;
 
+    private boolean delete;
+
     @Builder
     public Order(Member member, List<OrderItem> orderItems, OrderStatus orderStatus, String address, LocalDateTime orderDate) {
         Assert.notNull(member, "member can not be null");
