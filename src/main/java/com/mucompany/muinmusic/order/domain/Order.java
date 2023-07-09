@@ -77,4 +77,8 @@ public class Order {
         }
         this.orderStatus = OrderStatus.CANCELLED;
     }
+
+    public void softDelete() {
+        this.delete = true;
+    }
 }
