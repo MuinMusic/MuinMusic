@@ -67,9 +67,9 @@ public class OrderServiceTest {
         Member member = new Member("dp", "seoul");
         memberRepository.save(member);
 
-        Item item = new Item("jpaBook1", 20000, 100);
-        Item item2 = new Item("jpaBook2", 20000, 100);
-        Item item3 = new Item("jpaBook3", 20000, 100);
+        Item item = new Item("ticket1", 20000, 100);
+        Item item2 = new Item("ticket2", 20000, 100);
+        Item item3 = new Item("ticket3", 20000, 100);
         itemRepository.save(item);
         itemRepository.save(item2);
         itemRepository.save(item3);
