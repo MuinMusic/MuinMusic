@@ -3,11 +3,13 @@ package com.mucompany.muinmusic.order.api;
 import com.mucompany.muinmusic.order.app.OrderRequest;
 import com.mucompany.muinmusic.order.app.OrderResponse;
 import com.mucompany.muinmusic.order.app.OrderService;
+import com.mucompany.muinmusic.order.domain.Order;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api")
@@ -48,6 +51,13 @@ public class OrderController {
         orderService.softDelete(orderId, memberId);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @GetMapping(value = "/orders")
+    public List<OrderDto> getOrderHistory(@RequestParam Long memberId) {
+        List<Order> orderHistory = orderService.getOrderHistory(memberId);
+
+        return orderHistory.stream().map(OrderDto::new).toList();
     }
 
     private static OrderRequest createOrderRequest(OrderRequestDto orderRequestDto) {
