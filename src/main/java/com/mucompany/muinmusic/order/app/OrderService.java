@@ -11,10 +11,10 @@ import com.mucompany.muinmusic.exception.UnableToDeleteOrderException;
 import com.mucompany.muinmusic.item.app.ItemService;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
+import com.mucompany.muinmusic.order.api.OrderDto;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
-import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import com.mucompany.muinmusic.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -96,12 +96,15 @@ public class OrderService {
         order.softDelete();
     }
 
-    public List<Order> getOrderHistory(Long memberId) {
-        memberRepository.findById(memberId).orElseThrow();
+    public List<OrderDto> getOrderHistory(Long memberId) {
+        memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-        return orderRepository.findByMemberId(memberId).stream()
+         return orderRepository.findByMemberId(memberId).stream()
                 .filter(order -> !order.isDelete())
+                .map(OrderDto::new)
                 .toList();
+
+
     }
 
     private Order createOrder(Member member, List<CartItem> cartItems) {

@@ -54,10 +54,10 @@ public class OrderController {
     }
 
     @GetMapping(value = "/orders")
-    public List<OrderDto> getOrderHistory(@RequestParam Long memberId) {
-        List<Order> orderHistory = orderService.getOrderHistory(memberId);
+    public ResponseEntity<List<OrderDto>> getOrderHistory(@RequestParam Long memberId) {
+        List<OrderDto> orderHistory = orderService.getOrderHistory(memberId);
 
-        return orderHistory.stream().map(OrderDto::new).toList();
+        return ResponseEntity.status(HttpStatus.OK).body(orderHistory);
     }
 
     private static OrderRequest createOrderRequest(OrderRequestDto orderRequestDto) {

@@ -9,6 +9,7 @@ import com.mucompany.muinmusic.item.domain.Item;
 import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
+import com.mucompany.muinmusic.order.api.OrderDto;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
@@ -126,7 +127,7 @@ public class OrderServiceTest {
     @DisplayName("3개의 주문중 삭제 되지 않은 2개의 주문목록 가져오기")
     @Test
     void t3() {
-        //3개의 주문
+        //3개 주문
         orderSave();
         orderSave();
         orderSave();
@@ -135,9 +136,8 @@ public class OrderServiceTest {
         Order order3 = orderRepository.findById(3L).orElseThrow();
         order3.softDelete();
 
-        List<Order> orderHistory = orderService.getOrderHistory(1L);
+        List<OrderDto> orderHistory = orderService.getOrderHistory(1L);
 
-        assertThat(orderHistory.stream().allMatch(order -> !order.isDelete())).isEqualTo(true);
         assertThat(orderHistory.size()).isEqualTo(2);
     }
 

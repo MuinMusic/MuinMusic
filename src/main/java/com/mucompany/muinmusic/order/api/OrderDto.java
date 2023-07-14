@@ -35,11 +35,8 @@ public class OrderDto {
 
         private String name;
 
-        private String address;
-
         public MemberDto(Order order) {
             this.name = order.getMember().getName();
-            this.address = order.getAddress();
         }
     }
 
