@@ -1,5 +1,7 @@
 package com.mucompany.muinmusic.order.api;
 
+import com.mucompany.muinmusic.exception.CartItemNotFoundException;
+import com.mucompany.muinmusic.exception.CartNotFoundException;
 import com.mucompany.muinmusic.exception.InsufficientStockException;
 import com.mucompany.muinmusic.exception.ItemNameNotMatchException;
 import com.mucompany.muinmusic.exception.ItemNotFoundException;
@@ -7,8 +9,6 @@ import com.mucompany.muinmusic.exception.ItemPriceNotMatchException;
 import com.mucompany.muinmusic.exception.MemberNotFoundException;
 import com.mucompany.muinmusic.exception.NotMatchTheOrdererException;
 import com.mucompany.muinmusic.exception.OrderCancellationException;
-import com.mucompany.muinmusic.exception.OrderFailException;
-import com.mucompany.muinmusic.exception.OrderItemNotFoundException;
 import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +27,8 @@ public class GlobalExcceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
-    @ExceptionHandler(OrderItemNotFoundException.class)
-    public ResponseEntity<String> oderItemNotFoundException(OrderItemNotFoundException ex) {
+    @ExceptionHandler(CartItemNotFoundException.class)
+    public ResponseEntity<String> oderItemNotFoundException(CartItemNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
@@ -62,8 +62,8 @@ public class GlobalExcceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
-    @ExceptionHandler(OrderFailException.class)
-    public ResponseEntity<String> orderFailException(OrderFailException ex) {
+    @ExceptionHandler(CartNotFoundException.class)
+    public ResponseEntity<String> cartNotFoundException(CartNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 }

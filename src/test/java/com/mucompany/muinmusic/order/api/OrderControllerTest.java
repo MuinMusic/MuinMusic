@@ -1,25 +1,28 @@
 package com.mucompany.muinmusic.order.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mucompany.muinmusic.item.domain.Item;
-import com.mucompany.muinmusic.item.repository.ItemRepository;
+import com.mucompany.muinmusic.cart.domain.Cart;
+import com.mucompany.muinmusic.cart.domain.CartItem;
+import com.mucompany.muinmusic.cart.domain.repository.CartItemRepository;
+import com.mucompany.muinmusic.cart.domain.repository.CartRepository;
+import com.mucompany.muinmusic.exception.CartNotFoundException;
 import com.mucompany.muinmusic.exception.InsufficientStockException;
 import com.mucompany.muinmusic.exception.ItemNotFoundException;
 import com.mucompany.muinmusic.exception.MemberNotFoundException;
 import com.mucompany.muinmusic.exception.NotMatchTheOrdererException;
 import com.mucompany.muinmusic.exception.OrderCancellationException;
-import com.mucompany.muinmusic.exception.OrderItemNotFoundException;
 import com.mucompany.muinmusic.exception.OrderNotFoundException;
-import com.mucompany.muinmusic.facade.RedissonOrderService;
+import com.mucompany.muinmusic.item.domain.Item;
+import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.app.OrderRequest;
 import com.mucompany.muinmusic.order.app.OrderResponse;
+import com.mucompany.muinmusic.order.app.OrderService;
 import com.mucompany.muinmusic.order.domain.Order;
-import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
-import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +36,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,7 +56,9 @@ public class OrderControllerTest {
     @Autowired
     private MemberRepository memberRepository;
     @Autowired
-    private OrderItemRepository orderItemRepository;
+    private CartItemRepository cartItemRepository;
+    @Autowired
+    private CartRepository cartRepository;
     @Autowired
     private ItemRepository itemRepository;
     @Autowired
@@ -62,7 +66,7 @@ public class OrderControllerTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
-    private RedissonOrderService redissonOrderService;
+    private OrderService orderService;
 
 
     private void h2ResetAutoIncrement() {
@@ -70,6 +74,8 @@ public class OrderControllerTest {
         jdbcTemplate.execute("ALTER TABLE orders ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE item ALTER COLUMN id RESTART WITH 1");
         jdbcTemplate.execute("ALTER TABLE order_item ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE cart ALTER COLUMN id RESTART WITH 1");
+        jdbcTemplate.execute("ALTER TABLE cart_item ALTER COLUMN id RESTART WITH 1");
     }
 
     @BeforeEach
@@ -77,18 +83,36 @@ public class OrderControllerTest {
         h2ResetAutoIncrement();
 
         Member member = new Member("dp", "seoul");
-        Item item = new Item("jpaBook", 20000, 10);
-        Item item2 = new Item("springBook", 20000, 10);
-
         memberRepository.save(member);
+
+        Item item = new Item("jpaBook1", 20000, 100);
+        Item item2 = new Item("jpaBook2", 20000, 100);
+        Item item3 = new Item("jpaBook3", 20000, 100);
         itemRepository.save(item);
         itemRepository.save(item2);
+        itemRepository.save(item3);
 
-        OrderItem orderItem = new OrderItem(item.getId(), 3, 60000);
-        OrderItem orderItem2 = new OrderItem(item2.getId(), 1, 20000);
-        orderItemRepository.save(orderItem);
-        orderItemRepository.save(orderItem2);
+        CartItem cartItem = new CartItem(item.getId(), 1, 60000);
+        CartItem cartItem2 = new CartItem(item2.getId(), 1, 60000);
+        CartItem cartItem3 = new CartItem(item3.getId(), 1, 60000);
+        cartItemRepository.save(cartItem);
+        cartItemRepository.save(cartItem2);
+        cartItemRepository.save(cartItem3);
+
+        List<CartItem> cartItems = List.of(cartItem, cartItem2, cartItem3);
+        Cart cart = new Cart(member, cartItems);
+        cartRepository.save(cart);
     }
+
+    @AfterEach
+    void deleteAll() {
+        orderRepository.deleteAll();
+        cartRepository.deleteAll();
+        cartItemRepository.deleteAll();
+        itemRepository.deleteAll();
+        memberRepository.deleteAll();
+    }
+
 
     @Transactional
     @DisplayName(value = "orderRequestDto값 유효하면 http응답 201, 객체 반환 성공")
@@ -111,11 +135,10 @@ public class OrderControllerTest {
     @DisplayName(value = "orderRequestDto.memberId로 member 찾지 못할 경우 MemberNotFoundException 발생 및 HTTP404 응답")
     @Test
     void t2() throws Exception {
-        List<Long> orderItemIdList = List.of(1L, 2L);
 
         OrderRequestDto orderRequestDto = OrderRequestDto.builder()
                 .memberId(-1L)
-                .orderItemIdList(orderItemIdList)
+                .cartId(1L)
                 .address("seoul")
                 .orderDate(LocalDateTime.now())
                 .build();
@@ -133,14 +156,12 @@ public class OrderControllerTest {
     }
 
     @Transactional
-    @DisplayName(value = "orderRequestDto.orderItemIdList 로 orderItem 찾지 못할 경우 OrderItemNotFoundException 발생 및 HTTP404 응답")
+    @DisplayName(value = "orderRequestDto.cartId 로 cartItem 찾지 못할 경우 CartItemNotFoundException 발생 및 HTTP404 응답")
     @Test
     void t3() throws Exception {
-        List<Long> orderItemIdList = List.of(-1L, -2L);
-
         OrderRequestDto orderRequestDto = OrderRequestDto.builder()
                 .memberId(1L)
-                .orderItemIdList(orderItemIdList)
+                .cartId(-1L)
                 .address("seoul")
                 .orderDate(LocalDateTime.now())
                 .build();
@@ -152,8 +173,8 @@ public class OrderControllerTest {
                 .andExpect(result -> {
                     Throwable exception = result.getResolvedException();
                     assertNotNull(exception);
-                    assertEquals(OrderItemNotFoundException.class, exception.getClass());
-                    assertEquals("주문 상품을 찾을 수 없습니다", exception.getMessage());
+                    assertEquals(CartNotFoundException.class, exception.getClass());
+                    assertEquals("장바구니를 불러 올 수 없습니다", exception.getMessage());
                 });
     }
 
@@ -162,16 +183,15 @@ public class OrderControllerTest {
     @Test
     void t4() throws Exception {
         OrderRequestDto orderRequestDto = createOrderRequestDto();
+//
+        Long cartId = orderRequestDto.getCartId();
+        Cart cart = cartRepository.findById(cartId).orElseThrow();
 
-        List<Long> orderItemIdList = orderRequestDto.getOrderItemIdList();
-        List<Item> item = new ArrayList<>();
-        for (Long orderItemId : orderItemIdList) {
-            OrderItem result = orderItemRepository.findById(orderItemId).orElseThrow(OrderItemNotFoundException::new);
-            Long itemId = result.getItemId();
-            Item findItem = itemRepository.findById(itemId).orElseThrow();
-            item.add(findItem);
-        }
-        itemRepository.delete(item.get(0));
+        List<Item> items = cart.getCartItems().stream()
+                .map(cartItem -> itemRepository.findById(cartItem.getItemId()).orElseThrow(ItemNotFoundException::new))
+                .toList();
+
+        itemRepository.delete(items.get(0));
 
         String requestBody = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(orderRequestDto);
 
@@ -189,18 +209,22 @@ public class OrderControllerTest {
     @DisplayName(value = "주문하려는 Item의 재고수량 초과했을경우 InsufficientStockException 발생 및 HTTP409 응답")
     @Test
     void t5() throws Exception {
-        //아이템의 수량은 5개로 셋팅해놨다
-        Item book = new Item("개구리책", 20000, 5);
-        itemRepository.save(book);
-        //6개를 주문한다면
-        OrderItem orderItem = new OrderItem(book.getId(), 6, 120000);
-        orderItemRepository.save(orderItem);
+        Member member = new Member("Dongpil Son", "seoul");
+        memberRepository.save(member);
 
-        List<Long> orderItemIdList = List.of(orderItem.getId());
+        //아이템의 수량은 5개로 셋팅해놨다
+        Item ticket = new Item("xxx콘서트 티켓", 20000, 5);
+        itemRepository.save(ticket);
+
+        //6개를 주문한다면
+        CartItem cartItem = new CartItem(ticket.getId(), 6, 120000);
+        List<CartItem> cartItems = List.of(cartItem);
+        Cart cart = new Cart(member, cartItems);
+        cartRepository.save(cart);
 
         OrderRequestDto orderRequestDto = OrderRequestDto.builder()
-                .memberId(1L)
-                .orderItemIdList(orderItemIdList)
+                .memberId(member.getId())
+                .cartId(cart.getId())
                 .address("seoul")
                 .orderDate(LocalDateTime.now())
                 .build();
@@ -223,8 +247,8 @@ public class OrderControllerTest {
     void t6() throws Exception {
         OrderResponse orderResponse = orderPlace();
 
-        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
-        Order order = orderRepository.findByOrderItemsId(orderItemId);
+        List<Long> orderItemIdList = orderResponse.getOrderItemIdList();
+        Order order = orderRepository.findByOrderItemsId(orderItemIdList.get(0));
 
         Long orderId = order.getId();
         Long memberId = orderResponse.getMemberId();
@@ -287,8 +311,8 @@ public class OrderControllerTest {
         OrderResponse orderResponse = orderPlace();
 
         Long orderItemId = orderResponse.getOrderItemIdList().get(0);
-        Order order = orderRepository.findByOrderItemsId(orderItemId);
 
+        Order order = orderRepository.findByOrderItemsId(orderItemId);
         order.shipping();
 
         Long orderId = order.getId();
@@ -305,26 +329,24 @@ public class OrderControllerTest {
     }
 
     private OrderResponse orderPlace() {
-        List<Long> orderItemIdList = List.of(1L, 2L);
         OrderRequest orderRequest = OrderRequest.builder()
                 .memberId(1L)
-                .orderItemIdList(orderItemIdList)
+                .cartId(1L)
                 .address("seoul")
                 .orderDate(LocalDateTime.now())
                 .build();
 
-        OrderResponse orderResponse = redissonOrderService.placeOrder(orderRequest);
+        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
 
         return orderResponse;
     }
 
     private OrderRequestDto createOrderRequestDto() {
-        List<Long> orderItemIdList = List.of(1L);
         Member member = memberRepository.findById(1L).orElseThrow(MemberNotFoundException::new);
 
         return OrderRequestDto.builder()
                 .memberId(1L)
-                .orderItemIdList(orderItemIdList)
+                .cartId(1L)
                 .address(member.getAddress())
                 .orderDate(LocalDateTime.now())
                 .build();

@@ -1,5 +1,10 @@
 package com.mucompany.muinmusic.order.app;
 
+import com.mucompany.muinmusic.cart.domain.Cart;
+import com.mucompany.muinmusic.cart.domain.CartItem;
+import com.mucompany.muinmusic.cart.domain.repository.CartItemRepository;
+import com.mucompany.muinmusic.cart.domain.repository.CartRepository;
+import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import com.mucompany.muinmusic.item.domain.Item;
 import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
@@ -21,7 +26,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +45,10 @@ public class OrderServiceTest {
     private ItemRepository itemRepository;
     @Autowired
     private OrderItemRepository orderItemRepository;
+    @Autowired
+    private CartItemRepository cartItemRepository;
+    @Autowired
+    private CartRepository cartRepository;
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -65,14 +73,23 @@ public class OrderServiceTest {
         itemRepository.save(item2);
         itemRepository.save(item3);
 
-        OrderItem orderItem = new OrderItem(item.getId(), 1, 60000);
-        orderItemRepository.save(orderItem);
+        CartItem cartItem = new CartItem(item.getId(), 1, 60000);
+        CartItem cartItem2 = new CartItem(item2.getId(), 1, 60000);
+        CartItem cartItem3 = new CartItem(item3.getId(), 1, 60000);
+        cartItemRepository.save(cartItem);
+        cartItemRepository.save(cartItem2);
+        cartItemRepository.save(cartItem3);
+
+        List<CartItem> cartItems = List.of(cartItem, cartItem2, cartItem3);
+        Cart cart = new Cart(member, cartItems);
+        cartRepository.save(cart);
     }
 
     @AfterEach
     void deleteAll() {
         orderRepository.deleteAll();
-        orderItemRepository.deleteAll();
+        cartRepository.deleteAll();
+        cartItemRepository.deleteAll();
         itemRepository.deleteAll();
         memberRepository.deleteAll();
     }
@@ -80,27 +97,28 @@ public class OrderServiceTest {
     @Transactional
     @DisplayName(value = "orderId, memberId 값 유효하면 취소 성공 ")
     @Test
-    void t2() {
+    void t1() {
         orderSave();
 
-        Order order = orderRepository.findById(1L).orElseThrow();
+        Order order = orderRepository.findById(1L).orElseThrow(OrderNotFoundException::new);
 
         orderService.cancel(order.getId(), order.getMember().getId());
 
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
-    private void orderSave() {
-
+    void orderSave() {
         Member member = memberRepository.findById(1L).orElseThrow();
+        Cart cart = cartRepository.findById(1L).orElseThrow();
 
-        OrderItem orderItem = orderItemRepository.findById(1L).orElseThrow();
-        List<OrderItem> orderItemList = new ArrayList<>();
-        orderItemList.add(orderItem);
+        List<OrderItem> orderItems = cart.getCartItems().stream()
+                .map(OrderItem::new)
+                .peek(orderItemRepository::save)
+                .toList();
 
         Order order = Order.builder()
                 .member(member)
-                .orderItems(orderItemList)
+                .orderItems(orderItems)
                 .address("seoul")
                 .orderDate(LocalDateTime.now())
                 .orderStatus(OrderStatus.ORDERED)

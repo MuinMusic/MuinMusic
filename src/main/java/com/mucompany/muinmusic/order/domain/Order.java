@@ -2,6 +2,7 @@ package com.mucompany.muinmusic.order.domain;
 
 import com.mucompany.muinmusic.exception.OrderCancellationException;
 import com.mucompany.muinmusic.member.domain.Member;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,6 +18,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.util.Assert;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,7 +35,7 @@ public class Order {
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.PERSIST)
     private List<OrderItem> orderItems;
 
     @Column(nullable = false)
@@ -59,8 +61,8 @@ public class Order {
         this.orderDate = orderDate;
     }
 
-    public OrderStatus payed() {
-        return this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
+    public void payed() {
+        this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
     }
 
     public void shipping() {

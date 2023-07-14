@@ -1,6 +1,5 @@
 package com.mucompany.muinmusic.order.api;
 
-import com.mucompany.muinmusic.facade.RedissonOrderService;
 import com.mucompany.muinmusic.order.app.OrderRequest;
 import com.mucompany.muinmusic.order.app.OrderResponse;
 import com.mucompany.muinmusic.order.app.OrderService;
@@ -23,14 +22,13 @@ import java.time.LocalDateTime;
 public class OrderController {
 
     private final OrderService orderService;
-    private final RedissonOrderService redissonOrderService;
 
     @PostMapping(value = "/orders")
-    public ResponseEntity<OrderResponseDto> create(@RequestBody @Valid OrderRequestDto orderRequestDto) {
+    public ResponseEntity<OrderResponseDto> placeOrder(@RequestBody @Valid OrderRequestDto orderRequestDto) {
 
         OrderRequest orderRequest = createOrderRequest(orderRequestDto);
 
-        OrderResponse orderResponse = redissonOrderService.placeOrder(orderRequest);
+        OrderResponse orderResponse = orderService.placeOrder(orderRequest);
 
         OrderResponseDto orderResponseDto = new OrderResponseDto(orderResponse);
 
@@ -47,7 +45,7 @@ public class OrderController {
     private static OrderRequest createOrderRequest(OrderRequestDto orderRequestDto) {
         return OrderRequest.builder()
                 .memberId(orderRequestDto.getMemberId())
-                .orderItemIdList(orderRequestDto.getOrderItemIdList())
+                .cartId(orderRequestDto.getCartId())
                 .address(orderRequestDto.getAddress())
                 .orderDate(LocalDateTime.now())
                 .build();

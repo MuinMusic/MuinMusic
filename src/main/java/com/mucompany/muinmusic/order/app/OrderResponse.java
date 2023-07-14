@@ -1,5 +1,6 @@
 package com.mucompany.muinmusic.order.app;
 
+import com.mucompany.muinmusic.cart.domain.CartItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,12 +24,11 @@ public class OrderResponse {
     private LocalDateTime orderDate;
 
     @Builder
-    public OrderResponse(OrderRequest orderRequest, OrderStatus orderStatus) {
-        this.memberId = orderRequest.getMemberId();
-        this.orderItemIdList = orderRequest.getOrderItemIdList();
-        this.address = orderRequest.getAddress();
+    public OrderResponse(Long memberId, List<Long> orderItemIdList, String address, OrderStatus orderStatus, LocalDateTime orderDate) {
+        this.memberId = memberId;
+        this.orderItemIdList = orderItemIdList;
+        this.address = address;
         this.orderStatus = orderStatus;
-        this.orderDate = orderRequest.getOrderDate();
-
+        this.orderDate = orderDate;
     }
 }

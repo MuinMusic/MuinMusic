@@ -1,6 +1,5 @@
-package com.mucompany.muinmusic.order.domain;
+package com.mucompany.muinmusic.cart.domain;
 
-import com.mucompany.muinmusic.cart.domain.CartItem;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,13 +13,13 @@ import org.springframework.util.Assert;
 @Entity
 @NoArgsConstructor
 @Getter
-public class OrderItem {
+public class CartItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JoinColumn(name = "item_id")  // 외래 키를 생성하지 않고 값만 저장
+    @JoinColumn(name = "item_id")
     private Long itemId;
 
     @Column(nullable = false)
@@ -29,11 +28,13 @@ public class OrderItem {
     @Column(nullable = false)
     private int totalAmount;
 
-    public OrderItem(CartItem cartItem) {
-        Assert.notNull(cartItem, "cartItem can not be null");
+    public CartItem(Long itemId, int count, int totalAmount) {
+        Assert.notNull(itemId, "itemId can not be null");
+        Assert.notNull(count, "count can not be null");
+        Assert.notNull(totalAmount, "totalAmount can not be null");
 
-        this.itemId = cartItem.getItemId();
-        this.count = cartItem.getCount();
-        this.totalAmount = cartItem.getTotalAmount();
+        this.itemId = itemId;
+        this.count = count;
+        this.totalAmount = totalAmount;
     }
 }

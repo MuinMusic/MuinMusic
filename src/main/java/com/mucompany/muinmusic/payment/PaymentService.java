@@ -13,4 +13,10 @@ public class PaymentService {
         return true;
         //else return false
     }
+
+    public void paymentCancellation() {
+        /*
+        결제취소 관련 로직 실행 ...
+         */
+    }
 }
