@@ -23,7 +23,10 @@ import com.mucompany.muinmusic.order.app.OrderService;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,12 +39,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -406,6 +411,22 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$[1].orderItems[2].itemId").value(3))
                 .andExpect(jsonPath("$.length()").value(3))
                 ;
+    }
+
+    @Transactional
+    @DisplayName("회원 아이디 조회 안될 시 예외 및 메세지 반환")
+    @Test
+    void t14() throws Exception {
+        orderPlace();
+        orderPlace();
+        orderPlace();
+
+        Long memberId = -1L;
+
+        mockMvc.perform(get("/api/orders").param("memberId", memberId.toString()))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("회원을 찾을 수 없습니다"))
+        ;
     }
 
 
