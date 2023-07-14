@@ -47,6 +47,7 @@ public class Order {
 
     private LocalDateTime orderDate;
 
+    @Column(name = "isDeleted")
     private boolean delete;
 
     @Builder
@@ -61,6 +62,7 @@ public class Order {
         this.orderStatus = orderStatus;
         this.address = address;
         this.orderDate = orderDate;
+        this.delete = false;
     }
 
     public void payed() {
