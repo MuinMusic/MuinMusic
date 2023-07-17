@@ -14,7 +14,6 @@ import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
-import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import com.mucompany.muinmusic.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -79,7 +78,7 @@ public class OrderService {
     }
 
     @Transactional
-    public void softDelete(Long orderId, Long memberId) {
+    public void delete(Long orderId, Long memberId) {
         Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
@@ -93,7 +92,7 @@ public class OrderService {
                     throw new UnableToDeleteOrderException();
                 });
 
-        order.softDelete();
+        order.delete();
     }
 
     private Order createOrder(Member member, List<CartItem> cartItems) {
