@@ -82,17 +82,19 @@ public class OrderService {
         Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
-        Optional.of(order.getMember())
-                .filter(member -> member.equals(loginMember))
-                .orElseThrow(NotMatchTheOrdererException::new);
-
-        Optional.of(order.getOrderStatus())
-                .filter(orderStatus -> orderStatus.equals(OrderStatus.SHIPPING))
-                .ifPresent(o -> {
-                    throw new UnableToDeleteOrderException();
-                });
+        validation(loginMember, order);
 
         order.delete();
+    }
+
+    private static void validation(Member loginMember, Order order) {
+        if (!loginMember.equals(order.getMember())) {
+            throw new NotMatchTheOrdererException();
+        }
+
+        if (order.getOrderStatus().equals(OrderStatus.SHIPPING)){
+            throw new UnableToDeleteOrderException();
+        }
     }
 
     private Order createOrder(Member member, List<CartItem> cartItems) {
