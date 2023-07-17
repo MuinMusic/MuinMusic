@@ -274,7 +274,7 @@ public class OrderControllerTest {
         Long memberId = otherMember.getId();
 
         mockMvc.perform(post("/api/orders/{orderId}/cancel", orderId).param("memberId", memberId.toString()))
-                .andExpect(status().isConflict())
+                .andExpect(status().isNotFound())
                 .andExpect(result -> {
                     Throwable exception = result.getResolvedException();
                     assertNotNull(exception);
@@ -386,7 +386,7 @@ public class OrderControllerTest {
         Long memberId = otherMember.getId();
 
         mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
-                .andExpect(status().isConflict());
+                .andExpect(status().isNotFound());
     }
 
     private OrderResponse orderPlace() {

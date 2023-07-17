@@ -50,7 +50,7 @@ public class GlobalExcceptionHandler {
 
     @ExceptionHandler(NotMatchTheOrdererException.class)
     public ResponseEntity<String> notMatchTheOrdererException(NotMatchTheOrdererException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
     @ExceptionHandler(OrderCancellationException.class)
