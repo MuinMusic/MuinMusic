@@ -19,6 +19,7 @@ import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import com.mucompany.muinmusic.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -96,15 +97,13 @@ public class OrderService {
         order.softDelete();
     }
 
-    public List<OrderDto> getOrderHistory(Long memberId) {
+    public List<OrderDto> getOrderHistory(Long memberId, Pageable pageable) {
         memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-         return orderRepository.findByMemberId(memberId).stream()
+         return orderRepository.findByMemberId(memberId,pageable).stream()
                 .filter(order -> !order.isDelete())
                 .map(OrderDto::new)
                 .toList();
-
-
     }
 
     private Order createOrder(Member member, List<CartItem> cartItems) {

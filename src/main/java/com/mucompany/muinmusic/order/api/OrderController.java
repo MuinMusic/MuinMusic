@@ -3,9 +3,11 @@ package com.mucompany.muinmusic.order.api;
 import com.mucompany.muinmusic.order.app.OrderRequest;
 import com.mucompany.muinmusic.order.app.OrderResponse;
 import com.mucompany.muinmusic.order.app.OrderService;
-import com.mucompany.muinmusic.order.domain.Order;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -54,8 +56,8 @@ public class OrderController {
     }
 
     @GetMapping(value = "/orders")
-    public ResponseEntity<List<OrderDto>> getOrderHistory(@RequestParam Long memberId) {
-        List<OrderDto> orderHistory = orderService.getOrderHistory(memberId);
+    public ResponseEntity<List<OrderDto>> getOrderHistory(@RequestParam Long memberId,@PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.DESC) Pageable pageable) {
+        List<OrderDto> orderHistory = orderService.getOrderHistory(memberId,pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(orderHistory);
     }

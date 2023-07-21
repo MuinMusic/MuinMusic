@@ -22,6 +22,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -136,7 +138,9 @@ public class OrderServiceTest {
         Order order3 = orderRepository.findById(3L).orElseThrow();
         order3.softDelete();
 
-        List<OrderDto> orderHistory = orderService.getOrderHistory(1L);
+        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id"));
+
+        List<OrderDto> orderHistory = orderService.getOrderHistory(1L,pageRequest);
 
         assertThat(orderHistory.size()).isEqualTo(2);
     }
