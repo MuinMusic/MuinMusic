@@ -1,18 +1,14 @@
 package com.mucompany.muinmusic.promotion.entry.app;
 
 import com.mucompany.muinmusic.exception.MemberNotFoundException;
-import com.mucompany.muinmusic.member.domain.Member;
-import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
+import com.mucompany.muinmusic.member.repository.MemberRepository;
 import com.mucompany.muinmusic.promotion.core.PromotionNotActiveException;
 import com.mucompany.muinmusic.promotion.core.PromotionNotFoundException;
 import com.mucompany.muinmusic.promotion.core.PromotionPeriod;
-import com.mucompany.muinmusic.promotion.entry.domain.AlreadyEnteredPromotionException;
-import com.mucompany.muinmusic.promotion.entry.domain.Entry;
 import com.mucompany.muinmusic.promotion.entry.domain.EntryPromotion;
 import com.mucompany.muinmusic.promotion.entry.domain.EntryPromotionRepository;
 import com.mucompany.muinmusic.promotion.entry.domain.EntryRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

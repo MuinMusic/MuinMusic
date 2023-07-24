@@ -10,7 +10,7 @@ import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import com.mucompany.muinmusic.exception.UnableToDeleteOrderException;
 import com.mucompany.muinmusic.item.app.ItemService;
 import com.mucompany.muinmusic.member.domain.Member;
-import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
+import com.mucompany.muinmusic.member.repository.MemberRepository;
 import com.mucompany.muinmusic.order.api.OrderDto;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
