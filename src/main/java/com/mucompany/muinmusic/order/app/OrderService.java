@@ -7,13 +7,13 @@ import com.mucompany.muinmusic.exception.CartNotFoundException;
 import com.mucompany.muinmusic.exception.MemberNotFoundException;
 import com.mucompany.muinmusic.exception.NotMatchTheOrdererException;
 import com.mucompany.muinmusic.exception.OrderNotFoundException;
+import com.mucompany.muinmusic.exception.UnableToDeleteOrderException;
 import com.mucompany.muinmusic.item.app.ItemService;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
-import com.mucompany.muinmusic.order.domain.repository.OrderItemRepository;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import com.mucompany.muinmusic.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +35,6 @@ public class OrderService {
     private final PaymentService paymentService;
     private final CartRepository cartRepository;
     private final ItemService itemService;
-    private final OrderItemRepository orderItemRepository;
 
     @Transactional
     public OrderResponse placeOrder(OrderRequest orderRequest) {
@@ -77,6 +77,25 @@ public class OrderService {
         paymentService.paymentCancellation();
     }
 
+    @Transactional
+    public void delete(Long orderId, Long memberId) {
+        Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        validation(loginMember, order);
+
+        order.delete();
+    }
+
+    private static void validation(Member loginMember, Order order) {
+        if (!loginMember.equals(order.getMember())) {
+            throw new NotMatchTheOrdererException();
+        }
+
+        if (order.getOrderStatus().equals(OrderStatus.SHIPPING)){
+            throw new UnableToDeleteOrderException();
+        }
+    }
 
     private Order createOrder(Member member, List<CartItem> cartItems) {
 

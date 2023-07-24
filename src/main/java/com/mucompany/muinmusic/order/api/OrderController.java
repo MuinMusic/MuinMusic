@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,6 +39,13 @@ public class OrderController {
     @PostMapping(value = "/orders/{orderId}/cancel")
     public ResponseEntity<Object> cancel(@PathVariable Long orderId, @RequestParam Long memberId) {
         orderService.cancel(orderId, memberId);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    @DeleteMapping(value = "/orders/{orderId}")
+    public ResponseEntity<Object> delete(@PathVariable Long orderId, @RequestParam Long memberId) {
+        orderService.delete(orderId, memberId);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
