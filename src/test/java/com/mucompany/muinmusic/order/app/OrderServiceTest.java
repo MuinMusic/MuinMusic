@@ -9,6 +9,7 @@ import com.mucompany.muinmusic.item.domain.Item;
 import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
+import com.mucompany.muinmusic.order.api.OrderDto;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
@@ -21,6 +22,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,9 +70,9 @@ public class OrderServiceTest {
         Member member = new Member("dp", "seoul");
         memberRepository.save(member);
 
-        Item item = new Item("jpaBook1", 20000, 100);
-        Item item2 = new Item("jpaBook2", 20000, 100);
-        Item item3 = new Item("jpaBook3", 20000, 100);
+        Item item = new Item("ticket1", 20000, 100);
+        Item item2 = new Item("ticket2", 20000, 100);
+        Item item3 = new Item("ticket3", 20000, 100);
         itemRepository.save(item);
         itemRepository.save(item2);
         itemRepository.save(item3);
@@ -120,6 +123,26 @@ public class OrderServiceTest {
         orderService.delete(order.getId(),member.getId());
 
         assertThat(order.isDelete()).isEqualTo(true);
+    }
+
+    @Transactional
+    @DisplayName("3개의 주문중 삭제 되지 않은 2개의 주문목록 가져오기")
+    @Test
+    void t3() {
+        //3개 주문
+        orderSave();
+        orderSave();
+        orderSave();
+
+        //마지막 주문 삭제
+        Order order3 = orderRepository.findById(3L).orElseThrow();
+        order3.softDelete();
+
+        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id"));
+
+        List<OrderDto> orderHistory = orderService.getOrderHistory(1L,pageRequest);
+
+        assertThat(orderHistory.size()).isEqualTo(2);
     }
 
     void orderSave() {

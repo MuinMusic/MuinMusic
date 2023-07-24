@@ -39,11 +39,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -86,9 +89,9 @@ public class OrderControllerTest {
         Member member = new Member("dp", "seoul");
         memberRepository.save(member);
 
-        Item item = new Item("jpaBook1", 20000, 100);
-        Item item2 = new Item("jpaBook2", 20000, 100);
-        Item item3 = new Item("jpaBook3", 20000, 100);
+        Item item = new Item("ticket1", 20000, 100);
+        Item item2 = new Item("ticket", 20000, 100);
+        Item item3 = new Item("ticket3", 20000, 100);
         itemRepository.save(item);
         itemRepository.save(item2);
         itemRepository.save(item3);
@@ -368,8 +371,8 @@ public class OrderControllerTest {
                     assertEquals("주문내역을 삭제할 수 없습니다", exception.getMessage());
                 });
 
-            mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
-                    .andExpect(status().isConflict());
+        mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
+                .andExpect(status().isConflict());
     }
 
     @Transactional
@@ -388,6 +391,44 @@ public class OrderControllerTest {
         mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
                 .andExpect(status().isNotFound());
     }
+
+    @Transactional
+    @DisplayName("3건의 주문내역 가져오기")
+    @Test
+    void t13() throws Exception {
+        orderPlace();
+        orderPlace();
+        orderPlace();
+
+        Long memberId = 1L;
+
+        mockMvc.perform(get("/api/orders").param("memberId", memberId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].member.name").value("dp"))
+                .andExpect(jsonPath("$[0].address").value("seoul"))
+                .andExpect(jsonPath("$[0].orderItems[0].itemId").value(1))
+                .andExpect(jsonPath("$[1].orderItems[1].itemId").value(2))
+                .andExpect(jsonPath("$[1].orderItems[2].itemId").value(3))
+                .andExpect(jsonPath("$.length()").value(3))
+                ;
+    }
+
+    @Transactional
+    @DisplayName("회원 아이디 조회 안될 시 예외 및 메세지 반환")
+    @Test
+    void t14() throws Exception {
+        orderPlace();
+        orderPlace();
+        orderPlace();
+
+        Long memberId = -1L;
+
+        mockMvc.perform(get("/api/orders").param("memberId", memberId.toString()))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("회원을 찾을 수 없습니다"))
+        ;
+    }
+
 
     private OrderResponse orderPlace() {
         OrderRequest orderRequest = OrderRequest.builder()

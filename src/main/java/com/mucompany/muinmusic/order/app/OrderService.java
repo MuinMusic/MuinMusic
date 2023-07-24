@@ -11,6 +11,7 @@ import com.mucompany.muinmusic.exception.UnableToDeleteOrderException;
 import com.mucompany.muinmusic.item.app.ItemService;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
+import com.mucompany.muinmusic.order.api.OrderDto;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
@@ -18,6 +19,7 @@ import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import com.mucompany.muinmusic.payment.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,6 +97,15 @@ public class OrderService {
         if (order.getOrderStatus().equals(OrderStatus.SHIPPING)){
             throw new UnableToDeleteOrderException();
         }
+    }
+
+    public List<OrderDto> getOrderHistory(Long memberId, Pageable pageable) {
+        memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+
+         return orderRepository.findByMemberId(memberId,pageable).stream()
+                .filter(order -> !order.isDelete())
+                .map(OrderDto::new)
+                .toList();
     }
 
     private Order createOrder(Member member, List<CartItem> cartItems) {
