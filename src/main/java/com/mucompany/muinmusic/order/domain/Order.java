@@ -47,6 +47,9 @@ public class Order {
 
     private LocalDateTime orderDate;
 
+    @Column(name = "isDeleted")
+    private boolean delete;
+
     @Builder
     public Order(Member member, List<OrderItem> orderItems, OrderStatus orderStatus, String address, LocalDateTime orderDate) {
         Assert.notNull(member, "member can not be null");
@@ -59,6 +62,7 @@ public class Order {
         this.orderStatus = orderStatus;
         this.address = address;
         this.orderDate = orderDate;
+        this.delete = false;
     }
 
     public void payed() {
@@ -74,5 +78,9 @@ public class Order {
             throw new OrderCancellationException();
         }
         this.orderStatus = OrderStatus.CANCELLED;
+    }
+
+    public void softDelete() {
+        this.delete = true;
     }
 }
