@@ -2,8 +2,7 @@ package com.mucompany.muinmusic.promotion.entry.app;
 
 
 import com.mucompany.muinmusic.exception.MemberNotFoundException;
-import com.mucompany.muinmusic.member.domain.Member;
-import com.mucompany.muinmusic.member.domain.repository.MemberRepository;
+import com.mucompany.muinmusic.member.repository.MemberRepository;
 import com.mucompany.muinmusic.promotion.core.PromotionNotActiveException;
 import com.mucompany.muinmusic.promotion.core.PromotionNotFoundException;
 import com.mucompany.muinmusic.promotion.entry.domain.AlreadyEnteredPromotionException;
@@ -12,7 +11,6 @@ import com.mucompany.muinmusic.promotion.entry.domain.EntryRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Component
 public class EnterPromotionEligibilityValidator {
