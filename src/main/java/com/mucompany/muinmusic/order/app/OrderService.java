@@ -84,6 +84,12 @@ public class OrderService {
         Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
+        validation(loginMember, order);
+
+        order.softDelete();
+    }
+
+    private static void validation(Member loginMember, Order order) {
         if (!order.getMember().equals(loginMember)) {
             throw new NotMatchTheOrdererException();
         }
@@ -91,8 +97,6 @@ public class OrderService {
         if (order.getOrderStatus().equals(OrderStatus.SHIPPING)) {
             throw new UnableToDeleteOrderException();
         }
-
-        order.softDelete();
     }
 
     public List<OrderDto> getOrderHistory(Long memberId, Pageable pageable) {
