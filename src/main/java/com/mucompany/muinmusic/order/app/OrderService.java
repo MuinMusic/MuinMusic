@@ -84,15 +84,13 @@ public class OrderService {
         Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
-        Optional.of(order.getMember())
-                .filter(member -> member.equals(loginMember))
-                .orElseThrow(NotMatchTheOrdererException::new);
+        if (!order.getMember().equals(loginMember)) {
+            throw new NotMatchTheOrdererException();
+        }
 
-        Optional.of(order.getOrderStatus())
-                .filter(orderStatus -> orderStatus.equals(OrderStatus.SHIPPING))
-                .ifPresent(o -> {
-                    throw new UnableToDeleteOrderException();
-                });
+        if (order.getOrderStatus().equals(OrderStatus.SHIPPING)) {
+            throw new UnableToDeleteOrderException();
+        }
 
         order.softDelete();
     }
