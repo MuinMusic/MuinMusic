@@ -50,7 +50,7 @@ public class OrderController {
 
     @DeleteMapping(value = "/orders/{orderId}")
     public ResponseEntity<Object> softDelete(@PathVariable Long orderId, @RequestParam Long memberId) {
-        orderService.softDelete(orderId, memberId);
+        orderService.delete(orderId, memberId);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

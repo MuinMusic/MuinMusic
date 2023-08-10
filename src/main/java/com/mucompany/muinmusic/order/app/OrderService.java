@@ -80,21 +80,23 @@ public class OrderService {
     }
 
     @Transactional
-    public void softDelete(Long orderId, Long memberId) {
+    public void delete(Long orderId, Long memberId) {
         Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
-        Optional.of(order.getMember())
-                .filter(member -> member.equals(loginMember))
-                .orElseThrow(NotMatchTheOrdererException::new);
-
-        Optional.of(order.getOrderStatus())
-                .filter(orderStatus -> orderStatus.equals(OrderStatus.SHIPPING))
-                .ifPresent(o -> {
-                    throw new UnableToDeleteOrderException();
-                });
+        validation(loginMember, order);
 
         order.softDelete();
+    }
+
+    private static void validation(Member loginMember, Order order) {
+        if (!order.getMember().equals(loginMember)) {
+            throw new NotMatchTheOrdererException();
+        }
+
+        if (order.getOrderStatus().equals(OrderStatus.SHIPPING)) {
+            throw new UnableToDeleteOrderException();
+        }
     }
 
     public List<OrderDto> getOrderHistory(Long memberId, Pageable pageable) {
