@@ -80,7 +80,7 @@ public class OrderService {
     }
 
     @Transactional
-    public void softDelete(Long orderId, Long memberId) {
+    public void delete(Long orderId, Long memberId) {
         Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 

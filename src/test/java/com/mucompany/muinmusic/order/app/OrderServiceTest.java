@@ -120,7 +120,7 @@ public class OrderServiceTest {
         Order order = orderRepository.findById(1L).orElseThrow();
         Member member = memberRepository.findById(order.getMember().getId()).orElseThrow();
 
-        orderService.softDelete(order.getId(),member.getId());
+        orderService.delete(order.getId(),member.getId());
 
         assertThat(order.isDelete()).isEqualTo(true);
     }
