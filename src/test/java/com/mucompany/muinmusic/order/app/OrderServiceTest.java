@@ -4,6 +4,7 @@ import com.mucompany.muinmusic.cart.domain.Cart;
 import com.mucompany.muinmusic.cart.domain.CartItem;
 import com.mucompany.muinmusic.cart.domain.repository.CartItemRepository;
 import com.mucompany.muinmusic.cart.domain.repository.CartRepository;
+import com.mucompany.muinmusic.exception.ItemNotFoundException;
 import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import com.mucompany.muinmusic.item.domain.Item;
 import com.mucompany.muinmusic.item.repository.ItemRepository;
@@ -30,8 +31,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -96,6 +101,7 @@ public class OrderServiceTest {
         cartItemRepository.deleteAll();
         itemRepository.deleteAll();
         memberRepository.deleteAll();
+        orderItemRepository.deleteAll();
     }
 
     @Transactional
@@ -120,7 +126,7 @@ public class OrderServiceTest {
         Order order = orderRepository.findById(1L).orElseThrow();
         Member member = memberRepository.findById(order.getMember().getId()).orElseThrow();
 
-        orderService.delete(order.getId(),member.getId());
+        orderService.delete(order.getId(), member.getId());
 
         assertThat(order.isDelete()).isEqualTo(true);
     }
@@ -140,9 +146,37 @@ public class OrderServiceTest {
 
         PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id"));
 
-        List<OrderDto> orderHistory = orderService.getOrderHistory(1L,pageRequest);
+        List<OrderDto> orderHistory = orderService.getOrderHistory(1L, pageRequest);
 
         assertThat(orderHistory.size()).isEqualTo(2);
+    }
+
+    @DisplayName(value = "pessimisticLock 적용, 동시성 성공")
+    @Test
+    public void 동시에_100번_주문() throws InterruptedException {
+        int threadCount = 100;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(32);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+
+                try {
+                    orderService.placeOrder(new OrderRequest(1L, 1L, "seoul", LocalDateTime.now()));
+
+                } catch (Exception e) {
+                    log.info(e.getMessage());
+                }
+                latch.countDown();
+            });
+        }
+
+        latch.await();
+
+        Item findItem = itemRepository.findById(1L).orElseThrow(ItemNotFoundException::new);
+
+        assertEquals(0, findItem.getStock());
     }
 
     void orderSave() {
