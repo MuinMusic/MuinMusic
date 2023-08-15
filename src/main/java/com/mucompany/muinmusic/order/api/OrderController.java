@@ -56,15 +56,15 @@ public class OrderController {
     }
 
     @GetMapping(value = "/orders")
-    public ResponseEntity<List<OrderDto>> getOrderHistory(@RequestParam Long memberId,@PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.DESC) Pageable pageable) {
-        List<OrderDto> orderHistory = orderService.getOrderHistory(memberId,pageable);
+    public ResponseEntity<List<OrderDto>> getOrderHistory(@RequestParam Long memberId, @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        List<OrderDto> orderHistory = orderService.getOrderHistory(memberId, pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(orderHistory);
     }
 
     @GetMapping(value = "/orders/cancel")
-    public ResponseEntity<List<OrderDto>> getCancelOrderHistory(@RequestParam Long memberId,@PageableDefault(page = 0,size = 10,sort = "id",direction = Sort.Direction.DESC) Pageable pageable) {
-        List<OrderDto> orderHistory = orderService.getCancelOrderHistory(memberId,pageable);
+    public ResponseEntity<List<OrderDto>> getCancelOrderHistory(@RequestParam Long memberId, @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        List<OrderDto> orderHistory = orderService.getCancelOrderHistory(memberId, pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(orderHistory);
     }
