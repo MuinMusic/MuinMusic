@@ -179,6 +179,26 @@ public class OrderServiceTest {
         assertEquals(0, findItem.getStock());
     }
 
+    @Transactional
+    @DisplayName("취소한 주문목록 가져오기")
+    @Test
+    void t5() {
+        //3개 주문
+        orderSave();
+        orderSave();
+        orderSave();
+
+        //마지막 주문 취소
+        Order order3 = orderRepository.findById(3L).orElseThrow();
+        order3.cancel();
+
+        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id"));
+
+        List<OrderDto> orderHistory = orderService.getCancelOrderHistory(1L, pageRequest);
+
+        assertThat(orderHistory.size()).isEqualTo(1);
+    }
+
     void orderSave() {
         Member member = memberRepository.findById(1L).orElseThrow();
         Cart cart = cartRepository.findById(1L).orElseThrow();
