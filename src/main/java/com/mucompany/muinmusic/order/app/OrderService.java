@@ -108,6 +108,15 @@ public class OrderService {
                 .toList();
     }
 
+    public List<OrderDto> getCancelOrderHistory(Long memberId, Pageable pageable) {
+        memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+
+        return orderRepository.findByMemberId(memberId,pageable).stream()
+                .filter(order -> !order.isDelete() && order.getOrderStatus().equals(OrderStatus.CANCELLED))
+                .map(OrderDto::new)
+                .toList();
+    }
+
     private Order createOrder(Member member, List<CartItem> cartItems) {
 
         List<OrderItem> orderItemList = cartItems.stream()
