@@ -429,6 +429,28 @@ public class OrderControllerTest {
         ;
     }
 
+    @Transactional
+    @DisplayName("취소된 주문내역 가져오기")
+    @Test
+    void t15() throws Exception {
+        orderPlace();
+        orderPlace();
+        orderPlace();
+
+        Order order1 = orderRepository.findById(1L).orElseThrow();
+        order1.cancel();
+
+        Long memberId = 1L;
+
+        mockMvc.perform(get("/api/orders/cancel").param("memberId", memberId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].member.name").value("dp"))
+                .andExpect(jsonPath("$[0].address").value("seoul"))
+                .andExpect(jsonPath("$[0].orderItems[0].itemId").value(1))
+                .andExpect(jsonPath("$.length()").value(1))
+        ;
+    }
+
 
     private OrderResponse orderPlace() {
         OrderRequest orderRequest = OrderRequest.builder()
