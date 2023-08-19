@@ -451,6 +451,22 @@ public class OrderControllerTest {
         ;
     }
 
+    @Transactional
+    @DisplayName("취소된 주문내역 없을 경우")
+    @Test
+    void t16() throws Exception {
+        orderPlace();
+        orderPlace();
+        orderPlace();
+
+        Long memberId = 1L;
+
+        mockMvc.perform(get("/api/orders/cancel").param("memberId", memberId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0))
+        ;
+    }
+
 
     private OrderResponse orderPlace() {
         OrderRequest orderRequest = OrderRequest.builder()
