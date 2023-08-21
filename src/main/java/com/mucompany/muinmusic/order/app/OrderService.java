@@ -89,16 +89,7 @@ public class OrderService {
         order.softDelete();
     }
 
-    private static void validation(Member loginMember, Order order) {
-        if (!order.getMember().equals(loginMember)) {
-            throw new NotMatchTheOrdererException();
-        }
-
-        if (order.getOrderStatus().equals(OrderStatus.SHIPPING)) {
-            throw new UnableToDeleteOrderException();
-        }
-    }
-
+    @Transactional
     public List<OrderDto> getOrderHistory(Long memberId, Pageable pageable) {
         memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
@@ -108,6 +99,7 @@ public class OrderService {
                 .toList();
     }
 
+    @Transactional
     public List<OrderDto> getCancelOrderHistory(Long memberId, Pageable pageable) {
         memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
@@ -115,6 +107,16 @@ public class OrderService {
                 .filter(order -> !order.isDelete() && order.getOrderStatus().equals(OrderStatus.CANCELLED))
                 .map(OrderDto::new)
                 .toList();
+    }
+
+    private static void validation(Member loginMember, Order order) {
+        if (!order.getMember().equals(loginMember)) {
+            throw new NotMatchTheOrdererException();
+        }
+
+        if (order.getOrderStatus().equals(OrderStatus.SHIPPING)) {
+            throw new UnableToDeleteOrderException();
+        }
     }
 
     private Order createOrder(Member member, List<CartItem> cartItems) {
