@@ -187,7 +187,6 @@ public class OrderServiceTest {
         orderSave();
         orderSave();
         orderSave();
-        orderSave();
 
         //주문 취소
         Order order1 = orderRepository.findById(1L).orElseThrow();
