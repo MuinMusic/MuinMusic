@@ -467,7 +467,6 @@ public class OrderControllerTest {
         ;
     }
 
-
     private OrderResponse orderPlace() {
         OrderRequest orderRequest = OrderRequest.builder()
                 .memberId(1L)
