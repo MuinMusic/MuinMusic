@@ -11,7 +11,6 @@ import java.util.Optional;
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Long> {
 
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Item> findById(Long itemId);
 }
