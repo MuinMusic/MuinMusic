@@ -20,7 +20,7 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JoinColumn(name = "item_id")  // 외래 키를 생성하지 않고 값만 저장
+    @JoinColumn(name = "item_id")
     private Long itemId;
 
     @Column(nullable = false)
