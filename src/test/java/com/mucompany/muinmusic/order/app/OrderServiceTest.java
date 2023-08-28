@@ -218,6 +218,30 @@ public class OrderServiceTest {
         assertThat(orderHistory.size()).isEqualTo(0);
     }
 
+    @Transactional
+    @DisplayName("주문취소시 아이템 재고 원상복구")
+    @Test
+    void t7() {
+        OrderRequest orderRequest = OrderRequest.builder()
+                .memberId(1L)
+                .cartId(1L)
+                .address("seoul")
+                .orderDate(LocalDateTime.now())
+                .build();
+
+        orderService.placeOrder(orderRequest);
+
+        orderService.cancel(1L, 1L);
+
+        Item item = itemRepository.findById(1L).orElseThrow();
+        Item item2 = itemRepository.findById(2L).orElseThrow();
+        Item item3 = itemRepository.findById(3L).orElseThrow();
+
+        assertThat(item.getStock()).isEqualTo(100);
+        assertThat(item2.getStock()).isEqualTo(100);
+        assertThat(item3.getStock()).isEqualTo(100);
+    }
+
     void orderSave() {
         Member member = memberRepository.findById(1L).orElseThrow();
         Cart cart = cartRepository.findById(1L).orElseThrow();
