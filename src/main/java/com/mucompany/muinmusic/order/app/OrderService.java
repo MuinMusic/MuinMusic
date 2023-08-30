@@ -9,6 +9,8 @@ import com.mucompany.muinmusic.exception.NotMatchTheOrdererException;
 import com.mucompany.muinmusic.exception.OrderNotFoundException;
 import com.mucompany.muinmusic.exception.UnableToDeleteOrderException;
 import com.mucompany.muinmusic.item.app.ItemService;
+import com.mucompany.muinmusic.item.domain.Item;
+import com.mucompany.muinmusic.item.repository.ItemRepository;
 import com.mucompany.muinmusic.member.domain.Member;
 import com.mucompany.muinmusic.member.repository.MemberRepository;
 import com.mucompany.muinmusic.order.api.OrderDto;
@@ -36,6 +38,7 @@ public class OrderService {
     private final PaymentService paymentService;
     private final CartRepository cartRepository;
     private final ItemService itemService;
+    private final ItemRepository itemRepository;
 
     @Transactional
     public OrderResponse placeOrder(OrderRequest orderRequest) {
@@ -75,6 +78,14 @@ public class OrderService {
         }
 
         order.cancel();
+
+        List<OrderItem> orderItems = order.getOrderItems();
+        for (OrderItem orderItem : orderItems) {
+            int count = orderItem.getCount();
+            Item item = itemRepository.findById(orderItem.getItemId()).orElseThrow();
+            item.increase(count);
+        }
+
         paymentService.paymentCancellation();
     }
 
