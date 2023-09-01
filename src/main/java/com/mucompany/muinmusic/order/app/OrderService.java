@@ -90,6 +90,32 @@ public class OrderService {
     }
 
     @Transactional
+    public void partialCancel(Long orderId, Long memberId, Long itemId) {
+        Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if (!order.getMember().equals(loginMember)) {
+            throw new NotMatchTheOrdererException();
+        }
+
+        List<OrderItem> orderItems = order.getOrderItems();
+        //부분 주문 취소
+        orderItems.stream()
+                .filter(orderItem -> orderItem.getItemId() == itemId)
+                .forEach(OrderItem::cancel);
+        //재고원복
+        for (OrderItem orderItem : orderItems) {
+            int count = orderItem.getCount();
+            Item item = itemRepository.findById(orderItem.getItemId()).orElseThrow();
+            item.increase(count);
+        }
+
+
+
+        paymentService.paymentCancellation();
+    }
+
+    @Transactional
     public void delete(Long orderId, Long memberId) {
         Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
