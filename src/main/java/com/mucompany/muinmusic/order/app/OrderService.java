@@ -90,7 +90,7 @@ public class OrderService {
     }
 
     @Transactional
-    public void partialCancel(Long orderId, Long memberId, Long itemId) {
+    public void partialCancel(Long orderId, Long memberId, List<Long> itemIdList) {
         Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
 
@@ -105,9 +105,15 @@ public class OrderService {
                 .forEach(OrderItem::cancel);
         //재고원복
         for (OrderItem orderItem : orderItems) {
-            int count = orderItem.getCount();
-            Item item = itemRepository.findById(orderItem.getItemId()).orElseThrow();
-            item.increase(count);
+            if (itemIdList.contains(orderItem.getItemId())) {
+                // 부분 주문 취소
+                orderItem.cancel();
+                //재고 원복
+                for (Long id : itemIdList) {
+                    Item item = itemRepository.findById(id).orElseThrow();
+                    item.increase(orderItem.getCount());
+                }
+            }
         }
 
 
