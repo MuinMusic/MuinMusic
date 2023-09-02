@@ -99,11 +99,6 @@ public class OrderService {
         }
 
         List<OrderItem> orderItems = order.getOrderItems();
-        //부분 주문 취소
-        orderItems.stream()
-                .filter(orderItem -> orderItem.getItemId() == itemId)
-                .forEach(OrderItem::cancel);
-        //재고원복
         for (OrderItem orderItem : orderItems) {
             if (itemIdList.contains(orderItem.getItemId())) {
                 // 부분 주문 취소
@@ -116,7 +111,15 @@ public class OrderService {
             }
         }
 
-
+        orderItems.forEach(orderItem -> {
+            if (itemIdList.contains(orderItem.getItemId())) {
+                orderItem.cancel();
+                itemIdList.forEach(id-> {
+                    Item item = itemRepository.findById(id).orElseThrow();
+                    item.increase(orderItem.getCount());
+                });
+            }
+        });
 
         paymentService.paymentCancellation();
     }
