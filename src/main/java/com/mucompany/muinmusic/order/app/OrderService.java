@@ -42,8 +42,8 @@ public class OrderService {
 
     @Transactional
     public OrderResponse placeOrder(OrderRequest orderRequest) {
-        Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(MemberNotFoundException::new);
-        Cart cart = cartRepository.findById(orderRequest.getCartId()).orElseThrow(CartNotFoundException::new);
+        Member member = memberRepository.findById(orderRequest.memberId()).orElseThrow(MemberNotFoundException::new);
+        Cart cart = cartRepository.findById(orderRequest.cartId()).orElseThrow(CartNotFoundException::new);
 
         List<CartItem> cartItems = cart.getCartItems();
         cartItems.forEach(cartItem -> itemService.stockDecrease(cartItem.getItemId(), cartItem.getCount()));
