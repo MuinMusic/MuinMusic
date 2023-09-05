@@ -25,10 +25,10 @@ public class OrderResponseDto {
 
     @Builder
     public OrderResponseDto(OrderResponse orderResponse) {
-        this.memberId = orderResponse.getMemberId();
-        this.orderItemIdList = orderResponse.getOrderItemIdList();
-        this.orderStatus = orderResponse.getOrderStatus();
-        this.address = orderResponse.getAddress();
-        this.orderDate = orderResponse.getOrderDate();
+        this.memberId = orderResponse.memberId();
+        this.orderItemIdList = orderResponse.orderItemIdList();
+        this.orderStatus = orderResponse.orderStatus();
+        this.address = orderResponse.address();
+        this.orderDate = orderResponse.orderDate();
     }
 }
