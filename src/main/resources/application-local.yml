@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/muin_music
+    url: jdbc:mysql://localhost:3306/muinmusic
     username: dongpil
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
