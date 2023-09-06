@@ -1,5 +1,10 @@
 # MuinMusic
 
+AWS EC2 배포
+```shell
+http://ec2-43-202-56-183.ap-northeast-2.compute.amazonaws.com:8080/
+```
+
 ### 개발 환경 설정
 필수 프로그램 설치
 ```shell
