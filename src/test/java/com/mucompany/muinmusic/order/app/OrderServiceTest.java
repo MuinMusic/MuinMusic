@@ -153,7 +153,7 @@ public class OrderServiceTest {
 
     @DisplayName(value = "pessimisticLock 적용, 동시성 성공")
     @Test
-    public void 동시에_100번_주문() throws InterruptedException {
+    public void t4() throws InterruptedException {
         int threadCount = 100;
 
         ExecutorService executorService = Executors.newFixedThreadPool(32);

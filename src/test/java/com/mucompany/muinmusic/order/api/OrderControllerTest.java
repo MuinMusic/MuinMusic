@@ -251,11 +251,11 @@ public class OrderControllerTest {
     void t6() throws Exception {
         OrderResponse orderResponse = orderPlace();
 
-        List<Long> orderItemIdList = orderResponse.getOrderItemIdList();
+        List<Long> orderItemIdList = orderResponse.orderItemIdList();
         Order order = orderRepository.findByOrderItemsId(orderItemIdList.get(0));
 
         Long orderId = order.getId();
-        Long memberId = orderResponse.getMemberId();
+        Long memberId = orderResponse.memberId();
 
         mockMvc.perform(post("/api/orders/{orderId}/cancel", orderId).param("memberId", memberId.toString()))
                 .andExpect(status().isNoContent());
@@ -270,7 +270,7 @@ public class OrderControllerTest {
         Member otherMember = new Member("새 멤버", "seoul");
         memberRepository.save(otherMember);
 
-        Long orderItemId = orderResponse.getOrderItemIdList().get(1);
+        Long orderItemId = orderResponse.orderItemIdList().get(1);
         Order order = orderRepository.findByOrderItemsId(orderItemId);
 
         Long orderId = order.getId();
@@ -292,11 +292,11 @@ public class OrderControllerTest {
     void t8() throws Exception {
         OrderResponse orderResponse = orderPlace();
 
-        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
+        Long orderItemId = orderResponse.orderItemIdList().get(0);
         orderRepository.findByOrderItemsId(orderItemId);
 
         Long orderId = -1L;
-        Long memberId = orderResponse.getMemberId();
+        Long memberId = orderResponse.memberId();
 
         mockMvc.perform(post("/api/orders/{orderId}/cancel", orderId).param("memberId", memberId.toString()))
                 .andExpect(status().isNotFound())
@@ -314,13 +314,13 @@ public class OrderControllerTest {
     void t9() throws Exception {
         OrderResponse orderResponse = orderPlace();
 
-        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
+        Long orderItemId = orderResponse.orderItemIdList().get(0);
 
         Order order = orderRepository.findByOrderItemsId(orderItemId);
         order.shipping();
 
         Long orderId = order.getId();
-        Long memberId = orderResponse.getMemberId();
+        Long memberId = orderResponse.memberId();
 
         mockMvc.perform(post("/api/orders/{orderId}/cancel", orderId).param("memberId", memberId.toString()))
                 .andExpect(status().isConflict())
@@ -338,11 +338,11 @@ public class OrderControllerTest {
     void t10() throws Exception {
         OrderResponse orderResponse = orderPlace();
 
-        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
+        Long orderItemId = orderResponse.orderItemIdList().get(0);
         Order order = orderRepository.findByOrderItemsId(orderItemId);
 
         Long orderId = order.getId();
-        Long memberId = orderResponse.getMemberId();
+        Long memberId = orderResponse.memberId();
 
         mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
                 .andExpect(status().isNoContent());
@@ -354,13 +354,13 @@ public class OrderControllerTest {
     void t11() throws Exception {
         OrderResponse orderResponse = orderPlace();
 
-        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
+        Long orderItemId = orderResponse.orderItemIdList().get(0);
         Order order = orderRepository.findByOrderItemsId(orderItemId);
 
         order.shipping();
 
         Long orderId = order.getId();
-        Long memberId = orderResponse.getMemberId();
+        Long memberId = orderResponse.memberId();
 
         mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
                 .andExpect(status().isConflict())
@@ -382,7 +382,7 @@ public class OrderControllerTest {
         OrderResponse orderResponse = orderPlace();
 
         Member otherMember = memberRepository.save(new Member("sdp", "seoul"));
-        Long orderItemId = orderResponse.getOrderItemIdList().get(0);
+        Long orderItemId = orderResponse.orderItemIdList().get(0);
         Order order = orderRepository.findByOrderItemsId(orderItemId);
 
         Long orderId = order.getId();
@@ -409,8 +409,7 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$[0].orderItems[0].itemId").value(1))
                 .andExpect(jsonPath("$[1].orderItems[1].itemId").value(2))
                 .andExpect(jsonPath("$[1].orderItems[2].itemId").value(3))
-                .andExpect(jsonPath("$.length()").value(3))
-                ;
+                .andExpect(jsonPath("$.length()").value(3));
     }
 
     @Transactional
@@ -425,8 +424,7 @@ public class OrderControllerTest {
 
         mockMvc.perform(get("/api/orders").param("memberId", memberId.toString()))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("회원을 찾을 수 없습니다"))
-        ;
+                .andExpect(content().string("회원을 찾을 수 없습니다"));
     }
 
     @Transactional
@@ -447,8 +445,7 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$[0].member.name").value("dp"))
                 .andExpect(jsonPath("$[0].address").value("seoul"))
                 .andExpect(jsonPath("$[0].orderItems[0].itemId").value(1))
-                .andExpect(jsonPath("$.length()").value(1))
-        ;
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Transactional
@@ -463,8 +460,7 @@ public class OrderControllerTest {
 
         mockMvc.perform(get("/api/orders/cancel").param("memberId", memberId.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0))
-        ;
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     private OrderResponse orderPlace() {

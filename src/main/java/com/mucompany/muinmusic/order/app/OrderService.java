@@ -42,8 +42,8 @@ public class OrderService {
 
     @Transactional
     public OrderResponse placeOrder(OrderRequest orderRequest) {
-        Member member = memberRepository.findById(orderRequest.getMemberId()).orElseThrow(MemberNotFoundException::new);
-        Cart cart = cartRepository.findById(orderRequest.getCartId()).orElseThrow(CartNotFoundException::new);
+        Member member = memberRepository.findById(orderRequest.memberId()).orElseThrow(MemberNotFoundException::new);
+        Cart cart = cartRepository.findById(orderRequest.cartId()).orElseThrow(CartNotFoundException::new);
 
         List<CartItem> cartItems = cart.getCartItems();
         cartItems.forEach(cartItem -> itemService.stockDecrease(cartItem.getItemId(), cartItem.getCount()));
@@ -90,6 +90,30 @@ public class OrderService {
     }
 
     @Transactional
+    public void partialCancel(Long orderId, Long memberId, List<Long> itemIdList) {
+        Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
+        Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
+
+        if (!order.getMember().equals(loginMember)) {
+            throw new NotMatchTheOrdererException();
+        }
+
+        List<OrderItem> orderItems = order.getOrderItems();
+
+        orderItems.forEach(orderItem -> {
+            if (itemIdList.contains(orderItem.getItemId())) {
+                orderItem.cancel();
+                itemIdList.forEach(id-> {
+                    Item item = itemRepository.findById(id).orElseThrow();
+                    item.increase(orderItem.getCount());
+                });
+            }
+        });
+
+        paymentService.paymentCancellation();
+    }
+
+    @Transactional
     public void delete(Long orderId, Long memberId) {
         Member loginMember = memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
         Order order = orderRepository.findById(orderId).orElseThrow(OrderNotFoundException::new);
@@ -103,7 +127,7 @@ public class OrderService {
     public List<OrderDto> getOrderHistory(Long memberId, Pageable pageable) {
         memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-         return orderRepository.findByMemberId(memberId,pageable).stream()
+        return orderRepository.findByMemberId(memberId, pageable).stream()
                 .filter(order -> !order.isDelete())
                 .map(OrderDto::new)
                 .toList();
@@ -113,7 +137,7 @@ public class OrderService {
     public List<OrderDto> getCancelOrderHistory(Long memberId, Pageable pageable) {
         memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-        return orderRepository.findByMemberId(memberId,pageable).stream()
+        return orderRepository.findByMemberId(memberId, pageable).stream()
                 .filter(order -> !order.isDelete() && order.getOrderStatus().equals(OrderStatus.CANCELLED))
                 .map(OrderDto::new)
                 .toList();
