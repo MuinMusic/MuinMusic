@@ -99,17 +99,6 @@ public class OrderService {
         }
 
         List<OrderItem> orderItems = order.getOrderItems();
-        for (OrderItem orderItem : orderItems) {
-            if (itemIdList.contains(orderItem.getItemId())) {
-                // 부분 주문 취소
-                orderItem.cancel();
-                //재고 원복
-                for (Long id : itemIdList) {
-                    Item item = itemRepository.findById(id).orElseThrow();
-                    item.increase(orderItem.getCount());
-                }
-            }
-        }
 
         orderItems.forEach(orderItem -> {
             if (itemIdList.contains(orderItem.getItemId())) {
@@ -138,7 +127,7 @@ public class OrderService {
     public List<OrderDto> getOrderHistory(Long memberId, Pageable pageable) {
         memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-         return orderRepository.findByMemberId(memberId,pageable).stream()
+        return orderRepository.findByMemberId(memberId, pageable).stream()
                 .filter(order -> !order.isDelete())
                 .map(OrderDto::new)
                 .toList();
@@ -148,7 +137,7 @@ public class OrderService {
     public List<OrderDto> getCancelOrderHistory(Long memberId, Pageable pageable) {
         memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
-        return orderRepository.findByMemberId(memberId,pageable).stream()
+        return orderRepository.findByMemberId(memberId, pageable).stream()
                 .filter(order -> !order.isDelete() && order.getOrderStatus().equals(OrderStatus.CANCELLED))
                 .map(OrderDto::new)
                 .toList();
