@@ -409,8 +409,7 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$[0].orderItems[0].itemId").value(1))
                 .andExpect(jsonPath("$[1].orderItems[1].itemId").value(2))
                 .andExpect(jsonPath("$[1].orderItems[2].itemId").value(3))
-                .andExpect(jsonPath("$.length()").value(3))
-                ;
+                .andExpect(jsonPath("$.length()").value(3));
     }
 
     @Transactional
@@ -425,8 +424,7 @@ public class OrderControllerTest {
 
         mockMvc.perform(get("/api/orders").param("memberId", memberId.toString()))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("회원을 찾을 수 없습니다"))
-        ;
+                .andExpect(content().string("회원을 찾을 수 없습니다"));
     }
 
     @Transactional
@@ -447,8 +445,7 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$[0].member.name").value("dp"))
                 .andExpect(jsonPath("$[0].address").value("seoul"))
                 .andExpect(jsonPath("$[0].orderItems[0].itemId").value(1))
-                .andExpect(jsonPath("$.length()").value(1))
-        ;
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Transactional
@@ -463,8 +460,7 @@ public class OrderControllerTest {
 
         mockMvc.perform(get("/api/orders/cancel").param("memberId", memberId.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0))
-        ;
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     private OrderResponse orderPlace() {
