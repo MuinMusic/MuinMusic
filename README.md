@@ -1,6 +1,6 @@
 # MuinMusic
 
-AWS EC2 배포
+### AWS EC2 배포
 ```shell
 http://ec2-43-202-56-183.ap-northeast-2.compute.amazonaws.com:8080/
 ```
