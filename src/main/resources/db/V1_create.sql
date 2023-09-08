@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS `order_item` (
     `count` INT NOT NULL,
     `total_amount` INT NOT NULL,
     `item_id` BIGINT NOT NULL,
+    `order_status` VARCHAR(20) NOT NULL,
     PRIMARY KEY (`id`));
 
 DROP TABLE IF EXISTS `cart_item`;
@@ -46,7 +47,7 @@ CREATE TABLE IF NOT EXISTS `orders` (
     `order_date` DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     `address` VARCHAR(50) NOT NULL,
     `order_status` VARCHAR(20) NOT NULL,
-    `delete` BIT NOT NULL,
+    `is_deleted` BIT NOT NULL,
     PRIMARY KEY (`id`));
 
 DROP TABLE IF EXISTS `orders_order_items`;
@@ -55,7 +56,7 @@ CREATE TABLE IF NOT EXISTS `orders_order_items` (
     `order_id` BIGINT NOT NULL );
 
 DROP TABLE IF EXISTS `cart_cart_items`;
-CREATE TABLE IF NOT EXISTS `orders_order_items` (
+CREATE TABLE IF NOT EXISTS `cart_cart_items` (
     `cart_items_id` BIGINT NOT NULL,
     `cart_id` BIGINT NOT NULL );
 
