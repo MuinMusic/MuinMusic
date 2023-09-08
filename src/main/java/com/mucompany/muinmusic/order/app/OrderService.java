@@ -100,15 +100,20 @@ public class OrderService {
 
         List<OrderItem> orderItems = order.getOrderItems();
 
-        orderItems.forEach(orderItem -> {
-            if (itemIdList.contains(orderItem.getItemId())) {
-                orderItem.cancel();
-                itemIdList.forEach(id-> {
-                    Item item = itemRepository.findById(id).orElseThrow();
-                    item.increase(orderItem.getCount());
+        orderItems.stream()
+                .filter(orderItem -> itemIdList.contains(orderItem.getItemId()))
+                .forEach(OrderItem::cancel);
+
+        itemIdList.stream()
+                .map(id -> itemRepository.findById(id).orElseThrow())
+                .forEach(item -> {
+                    int count = orderItems.stream()
+                            .filter(orderItem -> item.getId().equals(orderItem.getItemId()))
+                            .mapToInt(OrderItem::getCount)
+                            .sum();
+
+                    item.increase(count);
                 });
-            }
-        });
 
         paymentService.paymentCancellation();
     }
