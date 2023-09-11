@@ -74,6 +74,15 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body(orderHistory);
     }
 
+    @PostMapping(value = "/orders/{orderId}/partial_cancel")
+    public ResponseEntity<Object> partialCancel(@PathVariable Long orderId,
+                                                @RequestParam Long memberId,
+                                                @RequestParam List<Long> itemIdList) {
+        orderService.partialCancel(orderId, memberId, itemIdList);
+
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
     private static OrderRequest createOrderRequest(OrderRequestDto orderRequestDto) {
         return OrderRequest.builder()
                 .memberId(orderRequestDto.getMemberId())
