@@ -1,0 +1,11 @@
+version: 0.0
+os: linux
+
+files:
+  - source: /
+    destination: /home/ubuntu/muinmusic-cicd-bucket
+permissions:
+  - object: /home/ubuntu/muinmusic-cicd-bucket
+    owner: ubuntu
+    group: ubuntu
+    mode: 755
