@@ -26,16 +26,12 @@ jobs:
         with:
           arguments: build
 
-    aws-s3-upload:
-      runs-on: ubuntu-latest
-      needs: build
-      steps:
-        - name: Upload to S3 Bucket
-          uses: aws-actions/configure-aws-credentials@v1
-          with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: us-east-1  # 본인의 AWS 지역에 따라 변경하세요
+      - name: upload to S3
+        run: aws s3 cp --region ap-northeast-2 ./awsbeginner.tar.gz s3://awsbeginer-bucket/awsbegginer_folder/
 
-        - name: Upload Artifact to S3
-          run: aws s3 cp ./path/to/artifact s3://muinmusic-cicd-bucket/
+      - name: deploy with AWS codeDeploy
+        run: aws deploy create-deployment
+          --application-name awsbeginner
+          --deployment-config-name CodeDeployDefault.AllAtOnce
+          --deployment-group-name awsbeginner-group
+          --s3-location bucket=awsbeginer-bucket,bundleType=tgz,key=awsbegginer_folder/awsbeginner.tar.gz
