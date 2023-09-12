@@ -26,15 +26,27 @@ jobs:
         with:
           arguments: build
 
-  deploy:
-    runs-on: ubuntu-latest  # 배포 단계도 똑같은 운영체제 환경에서 실행해야 합니다.
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: checkout release
+        uses: actions/checkout@v3
 
-    steps:
-      - name: Upload to S3
-        uses: w9jds/s3-sync-action@v2
+
+      - name: archive muin-music
+        run: tar cvfz ./muin-music.tar.gz *
+
+      - name: AWS configure credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          src: ./deploy
-          dest: s3://muinmusic-cicd-bucket-build/
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ap-northeast-2
 
+      - name: upload to S3
+        run: aws s3 cp --region ap-northeast-2 ./awsbeginner.tar.gz s3://awsbeginer-bucket/awsbegginer_folder/
+
+      - name: deploy with AWS codeDeploy
+        run: aws deploy create-deployment
+          --application-name awsbeginner
+          --deployment-config-name CodeDeployDefault.AllAtOnce
+          --deployment-group-name awsbeginner-group
+          --s3-location bucket=awsbeginer-bucket,bundleType=tgz,key=awsbegginer_folder/awsbeginner.tar.gz
