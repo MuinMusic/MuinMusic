@@ -26,12 +26,31 @@ jobs:
         with:
           arguments: build
 
-      - name: upload to S3
-        run: aws s3 cp --region ap-northeast-2 ./awsbeginner.tar.gz s3://awsbeginer-bucket/awsbegginer_folder/
+deploy:
+        # S3로 파일업로드
+        - provider: s3
+          access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+          secret_access_key: $AWS_SECRET_KEY # Travis repos settings에 설정된 값
+          bucket: muinmusic-cicd-bucket-build # s3 버킷
+          region: ap-northeast-2
+          skip_cleanup: true
+          acl: private # zip 파일 접근을 private으로
+          local_dir: deploy # before_deploy에서 생성한 디렉토리
+          wait-until-deployed: true
+          on:
+            all_branches: true # master말고 다른 모든 브런치 허용
+        ######################## 새롭게 추가한 코드 ##########################
 
-      - name: deploy with AWS codeDeploy
-        run: aws deploy create-deployment
-          --application-name awsbeginner
-          --deployment-config-name CodeDeployDefault.AllAtOnce
-          --deployment-group-name awsbeginner-group
-          --s3-location bucket=awsbeginer-bucket,bundleType=tgz,key=awsbegginer_folder/awsbeginner.tar.gz
+        # CodeDeploy 배포
+        - provider: codedeploy
+          access_key_id: $AWS_ACCESS_KEY # Travis repo settings에 설정된 값
+          secret_access_key: $AWS_SECRET_KEY # Travis repos settings에 설정된 값
+          bucket: muin-music-build # s3 버킷
+          key: muin-music_test.zip # 빌드 파일 압축해서 전달
+          bundle_type: zip # 압축 확장자
+          application: spring-deploy-test # 웹 콘솔에서 등록한 CodeDelpoy 애플리케이션 이름
+          deployment_group: muin-music # 웹 콘솔에서 등록한 CodeDelpoy 배포 그룹 이름
+          region: ap-northeast-2
+          wait-until-deployed: true
+          on:
+            all_branches: true # master말고 다른 모든 브런치 허용
