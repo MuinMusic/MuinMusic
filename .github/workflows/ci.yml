@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  S3_BUCKET_NAME: muinmusic-cicd-bucket
+  S3_BUCKET_NAME: muinmusic-bucket
 
 jobs:
   build:
