@@ -26,27 +26,5 @@ jobs:
         with:
           arguments: build
 
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: checkout release
-        uses: actions/checkout@v3
 
 
-      - name: archive muin-music
-        run: tar cvfz ./muin-music.tar.gz *
-
-      - name: AWS configure credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-          aws-region: ap-northeast-2
-
-      - name: upload to S3
-        run: aws s3 cp --region ap-northeast-2 ./awsbeginner.tar.gz s3://awsbeginer-bucket/awsbegginer_folder/
-
-      - name: deploy with AWS codeDeploy
-        run: aws deploy create-deployment
-          --application-name awsbeginner
-          --deployment-config-name CodeDeployDefault.AllAtOnce
-          --deployment-group-name awsbeginner-group
-          --s3-location bucket=awsbeginer-bucket,bundleType=tgz,key=awsbegginer_folder/awsbeginner.tar.gz
