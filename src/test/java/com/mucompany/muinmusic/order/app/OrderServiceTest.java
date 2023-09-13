@@ -30,6 +30,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -239,6 +240,25 @@ public class OrderServiceTest {
         assertThat(item.getStock()).isEqualTo(100);
         assertThat(item2.getStock()).isEqualTo(100);
         assertThat(item3.getStock()).isEqualTo(100);
+    }
+
+    @Transactional
+    @DisplayName("부분 취소 테스트 성공")
+    @Test
+    void t8() {
+        orderSave();
+
+        List<Long> itemIdList = Arrays.asList(1L, 2L);
+
+        orderService.partialCancel(1L, 1L, itemIdList);
+
+        Order order = orderRepository.findById(1L).orElseThrow();
+
+        List<OrderItem> orderItems = order.getOrderItems();
+
+        assertThat(orderItems.get(0).getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(orderItems.get(1).getOrderStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(orderItems.get(2).getOrderStatus()).isEqualTo(OrderStatus.PAYMENT_COMPLETED);
     }
 
     void orderSave() {

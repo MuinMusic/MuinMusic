@@ -42,6 +42,7 @@ public class OrderItem {
         this.itemId = cartItem.getItemId();
         this.count = cartItem.getCount();
         this.totalAmount = cartItem.getTotalAmount();
+        this.orderStatus = OrderStatus.PAYMENT_COMPLETED;
     }
 
     public void cancel() {
