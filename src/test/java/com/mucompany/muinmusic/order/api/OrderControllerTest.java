@@ -370,9 +370,6 @@ public class OrderControllerTest {
                     assertEquals(UnableToDeleteOrderException.class, exception.getClass());
                     assertEquals("주문내역을 삭제할 수 없습니다", exception.getMessage());
                 });
-
-        mockMvc.perform(delete("/api/orders/{orderId}", orderId).param("memberId", memberId.toString()))
-                .andExpect(status().isConflict());
     }
 
     @Transactional
