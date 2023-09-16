@@ -23,6 +23,7 @@ import com.mucompany.muinmusic.order.app.OrderService;
 import com.mucompany.muinmusic.order.domain.Order;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,13 +45,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Slf4j
 public class OrderControllerTest {
 
     @Autowired
@@ -458,6 +458,29 @@ public class OrderControllerTest {
         mockMvc.perform(get("/api/orders/cancel").param("memberId", memberId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Transactional
+    @DisplayName(value = "orderId,userId 값 유효하면 주문 부분취소 성공")
+    @Test
+    void t17() throws Exception {
+        orderPlace();
+        Order order = orderRepository.findById(1L).orElseThrow();
+
+        OrderStatus cancelled = OrderStatus.CANCELLED;
+
+        Long orderId = 1L;
+        Long memberId = 1L;
+        String itemIdList = "1,2,3";
+
+        mockMvc.perform(post("/api/orders/{orderId}/partial_cancel", orderId)
+                        .param("memberId", memberId.toString())
+                        .param("itemIdList", itemIdList))
+                .andExpect(status().isNoContent());
+//                .andExpect(jsonPath("$.order.orderItems[0].orderStatus").value(cancelled));
+
+        OrderStatus orderStatus = order.getOrderItems().get(0).getOrderStatus();
+        log.info("orderstatus = " + orderStatus);
     }
 
     private OrderResponse orderPlace() {
