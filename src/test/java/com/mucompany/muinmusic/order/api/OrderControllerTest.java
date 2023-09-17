@@ -467,20 +467,21 @@ public class OrderControllerTest {
         orderPlace();
         Order order = orderRepository.findById(1L).orElseThrow();
 
-        OrderStatus cancelled = OrderStatus.CANCELLED;
-
         Long orderId = 1L;
         Long memberId = 1L;
-        String itemIdList = "1,2,3";
+        String itemIdList = "1,2";
 
         mockMvc.perform(post("/api/orders/{orderId}/partial_cancel", orderId)
                         .param("memberId", memberId.toString())
                         .param("itemIdList", itemIdList))
                 .andExpect(status().isNoContent());
-//                .andExpect(jsonPath("$.order.orderItems[0].orderStatus").value(cancelled));
 
-        OrderStatus orderStatus = order.getOrderItems().get(0).getOrderStatus();
-        log.info("orderstatus = " + orderStatus);
+        OrderStatus orderStatus1 = order.getOrderItems().get(0).getOrderStatus();
+        OrderStatus orderStatus2 = order.getOrderItems().get(1).getOrderStatus();
+        OrderStatus orderStatus3 = order.getOrderItems().get(2).getOrderStatus();
+        assertEquals(orderStatus1,OrderStatus.CANCELLED);
+        assertEquals(orderStatus2,OrderStatus.CANCELLED);
+        assertEquals(orderStatus3,OrderStatus.PAYMENT_COMPLETED);
     }
 
     private OrderResponse orderPlace() {
