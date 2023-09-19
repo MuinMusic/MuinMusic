@@ -85,9 +85,9 @@ public class OrderController {
 
     private static OrderRequest createOrderRequest(OrderRequestDto orderRequestDto) {
         return OrderRequest.builder()
-                .memberId(orderRequestDto.getMemberId())
-                .cartId(orderRequestDto.getCartId())
-                .address(orderRequestDto.getAddress())
+                .memberId(orderRequestDto.memberId())
+                .cartId(orderRequestDto.cartId())
+                .address(orderRequestDto.address())
                 .orderDate(LocalDateTime.now())
                 .build();
     }

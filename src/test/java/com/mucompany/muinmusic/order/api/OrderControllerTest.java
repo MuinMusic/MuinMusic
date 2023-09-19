@@ -131,7 +131,7 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$..memberId").value(1))
                 .andExpect(jsonPath("$..orderItemIdList").isNotEmpty())
                 .andExpect(jsonPath("$..orderStatus").value(OrderStatus.PAYMENT_COMPLETED.toString()))
-                .andExpect(jsonPath("$..address").value(orderRequestDto.getAddress()))
+                .andExpect(jsonPath("$..address").value(orderRequestDto.address()))
                 .andExpect(jsonPath("$..orderDate").exists());
     }
 
@@ -188,7 +188,7 @@ public class OrderControllerTest {
     void t4() throws Exception {
         OrderRequestDto orderRequestDto = createOrderRequestDto();
 //
-        Long cartId = orderRequestDto.getCartId();
+        Long cartId = orderRequestDto.cartId();
         Cart cart = cartRepository.findById(cartId).orElseThrow();
 
         List<Item> items = cart.getCartItems().stream()
