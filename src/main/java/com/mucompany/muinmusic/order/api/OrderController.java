@@ -36,7 +36,13 @@ public class OrderController {
 
         OrderResponse orderResponse = orderService.placeOrder(orderRequest);
 
-        OrderResponseDto orderResponseDto = new OrderResponseDto(orderResponse);
+        OrderResponseDto orderResponseDto = OrderResponseDto.builder()
+                .memberId(orderResponse.memberId())
+                .orderItemIdList(orderResponse.orderItemIdList())
+                .orderStatus(orderResponse.orderStatus())
+                .address(orderRequestDto.address())
+                .orderDate(orderResponse.orderDate())
+                .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(orderResponseDto);
     }
