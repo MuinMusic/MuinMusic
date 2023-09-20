@@ -1,10 +1,13 @@
 
 version: 0.0
 os: linux
+#files:
+#  - source:  /
+#    destination: /home/ubuntu/
+#    overwrite: yes
 files:
-  - source:  /
-    destination: /home/ubuntu/
-    overwrite: yes
+  - source: /
+    destination: /var/www/myapp
 
 permissions:
   - object: /
@@ -12,13 +15,9 @@ permissions:
     owner: ubuntu
     group: ubuntu
 
+
 hooks:
-  ApplicationStop:
-    - location: scripts/stop.sh
-      runas: root
-  AfterInstall:
-    - location: scripts/initialize.sh
-      runas: root
   ApplicationStart:
-    - location: scripts/start.sh
-      runas: root
+    - location: deploy.sh
+      timeout: 300
+      runas: ec2-user
