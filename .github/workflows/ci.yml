@@ -57,3 +57,5 @@ jobs:
           --application-name muin-music \
           --deployment-group-name muin-music
 
+      - name: Copy script
+        run: cp ./scripts/*.sh ./deploy
