@@ -8,3 +8,9 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: validate
+
+artifacts:
+  files:
+    - appspec.yml # code-deploy를 위해
+    - build/libs/*.jar
+    - scripts/** # 추가!
