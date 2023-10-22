@@ -97,12 +97,12 @@ public class OrderServiceTest {
 
     @AfterEach
     void deleteAll() {
-        orderRepository.deleteAll();
-        cartRepository.deleteAll();
-        cartItemRepository.deleteAll();
-        itemRepository.deleteAll();
-        memberRepository.deleteAll();
-        orderItemRepository.deleteAll();
+        orderRepository.deleteAllInBatch();
+        cartRepository.deleteAllInBatch();
+        cartItemRepository.deleteAllInBatch();
+        itemRepository.deleteAllInBatch();
+        memberRepository.deleteAllInBatch();
+        orderItemRepository.deleteAllInBatch();
     }
 
     @Transactional

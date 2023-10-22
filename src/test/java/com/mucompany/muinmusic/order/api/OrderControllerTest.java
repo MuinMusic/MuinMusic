@@ -110,11 +110,11 @@ public class OrderControllerTest {
 
     @AfterEach
     void deleteAll() {
-        orderRepository.deleteAll();
-        cartRepository.deleteAll();
-        cartItemRepository.deleteAll();
-        itemRepository.deleteAll();
-        memberRepository.deleteAll();
+        orderRepository.deleteAllInBatch();
+        cartRepository.deleteAllInBatch();
+        cartItemRepository.deleteAllInBatch();
+        itemRepository.deleteAllInBatch();
+        memberRepository.deleteAllInBatch();
     }
 
 
@@ -223,6 +223,8 @@ public class OrderControllerTest {
         //6개를 주문한다면
         CartItem cartItem = new CartItem(ticket.getId(), 6, 120000);
         List<CartItem> cartItems = List.of(cartItem);
+        cartItemRepository.saveAll(cartItems);
+
         Cart cart = new Cart(member, cartItems);
         cartRepository.save(cart);
 
