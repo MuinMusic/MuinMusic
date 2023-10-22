@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://43.202.56.183:3306/muin_music
+    url: jdbc:mysql://localhost:3306/muin_music
     username: muin_music
     password: muin1234!
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -8,9 +8,3 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: validate
-
-artifacts:
-  files:
-    - appspec.yml # code-deploy를 위해
-    - build/libs/*.jar
-    - scripts/** # 추가!
