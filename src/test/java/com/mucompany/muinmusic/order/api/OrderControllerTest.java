@@ -92,18 +92,15 @@ public class OrderControllerTest {
         Item item = new Item("ticket1", 20000, 100);
         Item item2 = new Item("ticket", 20000, 100);
         Item item3 = new Item("ticket3", 20000, 100);
-        itemRepository.save(item);
-        itemRepository.save(item2);
-        itemRepository.save(item3);
+        List<Item> items = List.of(item, item2, item3);
+        itemRepository.saveAll(items);
 
         CartItem cartItem = new CartItem(item.getId(), 1, 60000);
         CartItem cartItem2 = new CartItem(item2.getId(), 1, 60000);
         CartItem cartItem3 = new CartItem(item3.getId(), 1, 60000);
-        cartItemRepository.save(cartItem);
-        cartItemRepository.save(cartItem2);
-        cartItemRepository.save(cartItem3);
-
         List<CartItem> cartItems = List.of(cartItem, cartItem2, cartItem3);
+        cartItemRepository.saveAll(cartItems);
+
         Cart cart = new Cart(member, cartItems);
         cartRepository.save(cart);
     }
