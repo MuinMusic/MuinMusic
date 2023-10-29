@@ -37,6 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
@@ -196,7 +197,7 @@ public class OrderServiceTest {
 
         List<OrderDto> orderHistory = orderService.getCancelOrderHistory(1L, pageRequest);
 
-        assertThat(orderHistory.size()).isEqualTo(2);
+        assertThat(orderHistory).hasSize(2);
     }
 
     @Transactional
@@ -230,14 +231,16 @@ public class OrderServiceTest {
 
         orderService.cancel(1L, 1L);
 
-        Item item = itemRepository.findById(1L).orElseThrow();
-        Item item2 = itemRepository.findById(2L).orElseThrow();
-        Item item3 = itemRepository.findById(3L).orElseThrow();
+        List<Long> longs = List.of(1L, 2L, 3L);
+        List<Item> items = itemRepository.findAllById(longs);
 
-        assertThat(item.getStock()).isEqualTo(100);
-        assertThat(item2.getStock()).isEqualTo(100);
-        assertThat(item3.getStock()).isEqualTo(100);
+
+        assertThat(items).hasSize(3)
+                .extracting("stock")
+                .containsExactly(100, 100, 100);
     }
+
+
 
     @Transactional
     @DisplayName("부분 취소 테스트 성공")
