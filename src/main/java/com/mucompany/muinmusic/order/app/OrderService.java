@@ -128,7 +128,7 @@ public class OrderService {
         order.softDelete();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<OrderDto> getOrderHistory(Long memberId, Pageable pageable) {
         memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
@@ -138,7 +138,7 @@ public class OrderService {
                 .toList();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<OrderDto> getCancelOrderHistory(Long memberId, Pageable pageable) {
         memberRepository.findById(memberId).orElseThrow(MemberNotFoundException::new);
 
