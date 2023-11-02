@@ -21,9 +21,11 @@ import com.mucompany.muinmusic.order.app.OrderRequest;
 import com.mucompany.muinmusic.order.app.OrderResponse;
 import com.mucompany.muinmusic.order.app.OrderService;
 import com.mucompany.muinmusic.order.domain.Order;
+import com.mucompany.muinmusic.order.domain.OrderItem;
 import com.mucompany.muinmusic.order.domain.OrderStatus;
 import com.mucompany.muinmusic.order.domain.repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -475,12 +478,14 @@ public class OrderControllerTest {
                         .param("itemIdList", itemIdList))
                 .andExpect(status().isNoContent());
 
-        OrderStatus orderStatus1 = order.getOrderItems().get(0).getOrderStatus();
-        OrderStatus orderStatus2 = order.getOrderItems().get(1).getOrderStatus();
-        OrderStatus orderStatus3 = order.getOrderItems().get(2).getOrderStatus();
-        assertEquals(orderStatus1,OrderStatus.CANCELLED);
-        assertEquals(orderStatus2,OrderStatus.CANCELLED);
-        assertEquals(orderStatus3,OrderStatus.PAYMENT_COMPLETED);
+        List<OrderItem> orderItems = order.getOrderItems();
+        assertThat(orderItems).hasSize(3)
+                .extracting("itemId", "orderStatus")
+                .containsExactlyInAnyOrder(
+                        tuple(1L,OrderStatus.CANCELLED),
+                        tuple(2L,OrderStatus.CANCELLED),
+                        tuple(3L,OrderStatus.PAYMENT_COMPLETED)
+                );
     }
 
     private OrderResponse orderPlace() {
